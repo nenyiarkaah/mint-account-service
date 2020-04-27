@@ -7,7 +7,7 @@ import scala.language.higherKinds
 
 class AccountService[F[_]]()(implicit M: MonadError[F, Throwable])  {
   def insert(account: Account): F[Int] =  {
-    val id = 1
+    val id = account.id
     M.pure(id)
   }
 }
