@@ -25,7 +25,8 @@ class CommandRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
         status should ===(StatusCodes.OK)
         contentType should ===(ContentTypes.`application/json`)
         val count = entityAs[CommandResult].count
-        count should ===(1)
+        val expectedId = 1
+        count should ===(expectedId)
       }
     }
   }

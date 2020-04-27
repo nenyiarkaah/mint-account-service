@@ -2,7 +2,7 @@ package org.mint.akkahttp
 
 import akka.http.scaladsl.model.HttpMethods.{DELETE, GET, OPTIONS, POST, PUT}
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
-import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Credentials`, `Access-Control-Allow-Headers`, `Access-Control-Allow-Methods`, `Access-Control-Allow-Origin`}
+import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Directive0, Route}
 
@@ -19,7 +19,8 @@ trait CORSHandler {
   }
   //this handles preflight OPTIONS requests.
   private def preflightRequestHandler: Route = options {
-    complete(HttpResponse(StatusCodes.OK).withHeaders(`Access-Control-Allow-Methods`(OPTIONS, POST, PUT, GET, DELETE)))
+    complete(HttpResponse(StatusCodes.OK)
+      .withHeaders(`Access-Control-Allow-Methods`(OPTIONS, POST, PUT, GET, DELETE)))
   }
   // Wrap the Route with this method to enable adding of CORS headers
   def corsHandler(r: Route): Route = addAccessControlHeaders {

@@ -57,3 +57,14 @@ scalacOptions ++= Seq(
   "-feature",
   "-Ypartial-unification",
 )
+
+// Create a test Scala style task to run with tests
+lazy val testScalaStyle = taskKey[Unit]("testScalaStyle")
+testScalaStyle := scalastyle.in(Test).toTask("").value
+(test in Test) := ((test in Test) dependsOn testScalaStyle).value
+(scalastyleConfig in Test) := baseDirectory.value / "project" / "scalastyle-config.xml"
+
+lazy val compileScalaStyle = taskKey[Unit]("compileScalaStyle")
+compileScalaStyle := scalastyle.in(Compile).toTask("").value
+(test in Test) := ((test in Test) dependsOn compileScalaStyle).value
+(scalastyleConfig in Compile) := baseDirectory.value / "project" / "scalastyle-config.xml"
