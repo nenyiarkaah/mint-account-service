@@ -5,9 +5,11 @@ import cats.instances.future.catsStdInstancesForFuture
 import com.softwaremill.macwire.wire
 import org.mint.Exceptions.InvalidAccount
 import org.mint.akkahttp.utils.TestData._
+import org.mint.models.Account
 import org.mint.services.AccountService
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{AsyncWordSpecLike, Matchers}
+import org.mint.repositories.Repository
 
 import scala.concurrent.Future
 
@@ -45,6 +47,12 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
     "raise an error when company is empty string" in {
       val resultException = service.insert(berlinWithEmptyCompany)
       recoverToSucceededIf[InvalidAccount](resultException)
+    }
+  }
+
+  private def createStubRepo = {
+    new Repository[Future] {
+      override def insert(row: Account): Future[Int] = Future.successful(accountId)
     }
   }
 }

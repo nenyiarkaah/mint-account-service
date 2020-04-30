@@ -2,14 +2,18 @@ package org.mint.akkahttp
 
 import akka.http.scaladsl.model.{ContentTypes, StatusCodes}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
+import cats.instances.future.catsStdInstancesForFuture
 import com.softwaremill.macwire.wire
 import org.mint.akkahttp.utils.RequestSupport
+import org.mint.akkahttp.CommandRoutes
 import org.mint.models.CommandResult
 import org.mint.services.AccountService
 import org.scalatest.{Matchers, WordSpec}
 import org.mint.akkahttp.utils.TestData._
 import org.mint.json.SprayJsonFormat._
 import cats.instances.future.catsStdInstancesForFuture
+import org.mint.repositories.Repository
+import org.mint.models.Account
 
 import scala.concurrent.Future
 
@@ -28,6 +32,12 @@ class CommandRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
         val expectedId = 1
         count should ===(expectedId)
       }
+    }
+  }
+
+  private def createStubRepo = {
+    new Repository[Future] {
+      override def insert(row: Account): Future[Int] = Future.successful(accountId)
     }
   }
 }

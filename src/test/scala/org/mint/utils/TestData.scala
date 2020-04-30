@@ -3,7 +3,7 @@ package org.mint.akkahttp.utils
 import org.mint.models.Account
 
 object TestData {
-  private val accountId = 1
+  val accountId = 1
   private val nullValue: Null = null
   val berlin = Account(accountId, "berlin", "test", "Deutsche Bank", true, true, "mapping file")
   val berlinWithNullName = Account(accountId, nullValue, "test", "Deutsche Bank", true, true, "mapping file")
