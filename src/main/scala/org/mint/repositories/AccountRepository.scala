@@ -24,4 +24,6 @@ class AccountRepository(db: Database) extends Repository[Future] {
   val accounts = TableQuery[Accounts]
 
   override def insert(acc: Account): Future[Int] = db.run(accounts += acc)
+
+  override def createSchema(): Future[Unit] = db.run(accounts.schema.create)
 }

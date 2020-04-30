@@ -38,6 +38,7 @@ class CommandRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
   private def createStubRepo = {
     new Repository[Future] {
       override def insert(row: Account): Future[Int] = Future.successful(accountId)
+      override def createSchema(): Future[Unit] = Future.successful(())
     }
   }
 }

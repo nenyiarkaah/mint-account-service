@@ -53,6 +53,7 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
   private def createStubRepo = {
     new Repository[Future] {
       override def insert(row: Account): Future[Int] = Future.successful(accountId)
+      override def createSchema(): Future[Unit] = Future.successful(())
     }
   }
 }
