@@ -1,4 +1,4 @@
-package org.mint.akkahttp.utils
+package org.mint.utils
 
 import akka.http.scaladsl.model.{HttpEntity, HttpMethods, HttpRequest, MediaTypes}
 import org.mint.json.GenericJsonWriter

@@ -40,6 +40,7 @@ lazy val root = (project in file("."))
       "org.scalatest" %% "scalatest" % "3.0.5" % Test,
       "com.dimafeng" %% "testcontainers-scala" % "0.20.0" % Test,
       "org.testcontainers" % "postgresql" % "1.9.1" % Test,
+      "org.testcontainers" % "mssqlserver" % "1.9.1" % Test,
       "com.storm-enroute" %% "scalameter-core" % "0.10.1" % Test
     ),
     dockerBaseImage := "openjdk:8-jre-alpine",

@@ -2,6 +2,7 @@ package org.mint.repositories
 
 import org.mint.models.Account
 import slick.jdbc.SQLServerProfile.api._
+import slick.sql.FixedSqlAction
 
 import scala.concurrent.Future
 
@@ -26,4 +27,6 @@ class AccountRepository(db: Database) extends Repository[Future] {
   override def insert(acc: Account): Future[Int] = db.run(accounts += acc)
 
   override def createSchema(): Future[Unit] = db.run(accounts.schema.create)
+
+  def dropSchema(): FixedSqlAction[Unit, NoStream, Effect.Schema] = accounts.schema.drop
 }
