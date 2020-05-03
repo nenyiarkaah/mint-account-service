@@ -17,6 +17,6 @@ object TestData {
     IndexedSeq(
       berlin,
       Account(2, "swiss", "test", "Credit Suisse", true, true, "mapping file"),
-      Account(3, "paris", "test", "Banque National Paris", true, false, null)
+      Account(3, "paris", "test", "Banque National Paris", true, false, "mapping file")
     )
 }

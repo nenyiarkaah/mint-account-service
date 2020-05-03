@@ -23,8 +23,7 @@ trait SprayJsonFormat extends SprayJsonSupport {
       }
     }
 
-  def genericJsonWriter[T: RootJsonFormat]: GenericJsonWriter[T] =
-    (e: T) => spray.json.jsonWriter[T].write(e).toString()
+  def genericJsonWriter[T: RootJsonFormat]: GenericJsonWriter[T] = (e: T) => spray.json.jsonWriter[T].write(e).toString()
 
   implicit val genericAccountWriter: GenericJsonWriter[Account] = genericJsonWriter[Account]
   implicit val genericAccountsWriter: GenericJsonWriter[Accounts] = genericJsonWriter[Accounts]

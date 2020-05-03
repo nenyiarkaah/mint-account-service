@@ -12,7 +12,7 @@ import scala.language.higherKinds
 class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwable]) extends AccountAlg[F] {
   def insert(account: Account): F[Int] =  {
     val id = account.id
-    validateAccount(account).flatMap(_ => repo.insert(account))//M.pure(account.id))
+    validateAccount(account).flatMap(_ => repo.insert(account))
   }
 
   private val validateAccount: Account => F[Unit] ={
