@@ -38,10 +38,11 @@ lazy val root = (project in file("."))
       "com.lihaoyi" %% "ujson" % upickleVersion,
       "com.softwaremill.macwire" %% "macros" % "2.3.1",
       "org.scalatest" %% "scalatest" % "3.0.5" % Test,
-      "com.dimafeng" %% "testcontainers-scala" % "0.20.0" % Test,
-      "org.testcontainers" % "postgresql" % "1.9.1" % Test,
+      "com.dimafeng" %% "testcontainers-scala" % "0.36.0" % Test,
+      "com.dimafeng" %% "testcontainers-scala-mssqlserver" % "0.36.0" % Test,
       "org.testcontainers" % "mssqlserver" % "1.9.1" % Test,
-      "com.storm-enroute" %% "scalameter-core" % "0.10.1" % Test
+      "com.storm-enroute" %% "scalameter-core" % "0.10.1" % Test,
+      "com.microsoft.sqlserver" % "mssql-jdbc" % "8.2.2.jre8"
     ),
     dockerBaseImage := "openjdk:8-jre-alpine",
     Test / fork := true,
