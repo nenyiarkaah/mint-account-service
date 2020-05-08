@@ -45,26 +45,50 @@ class E2ETest
     Await.ready(mod.repo.createSchema(), 10.seconds)
   }
 
-  "Accounts service" should {
-    "insert new account" in {
+  "insert" should {
+    "return 200 when inserting new accounts into empty database" in {
       insertData()
+    }
+    "return a 412 Precondition Failed request when inserting account that is already inserted" in {
+      val insert = insertRequest(madrid)
+      insertAndCheckSuccessfulRequest(insert)
+
+      val secondInsert = insertRequest(madrid)
+      insertAndCheckFailedRequest(secondInsert)
+    }
+    "return a 412 Precondition Failed request when inserting account with missing name" in {
+      val insert = insertRequest(berlinWithEmptyName)
+      insertAndCheckFailedRequest(insert)
     }
   }
 
   private def insertData(): Unit =
     mockData.foreach { t =>
       val insert = insertRequest(t)
-      insertAndCheck(insert)
+      insertAndCheckSuccessfulRequest(insert)
     }
 
-  private def insertAndCheck(insert: HttpRequest) = {
+  private def insertAndCheckSuccessfulRequest(insert: HttpRequest): Any = {
     insert ~> mod.routes ~> check {
-      if (StatusCodes.OK !== status) println(s"*** Response body: $responseEntity")
+      val  expectedStatusCode = StatusCodes.OK
+      val contentType = ContentTypes.`application/json`
+      if (expectedStatusCode !== status) println(s"*** Response body: $responseEntity")
 
-      status should ===(StatusCodes.OK)
-      contentType should ===(ContentTypes.`application/json`)
+      status should ===(expectedStatusCode)
+      contentType should ===(contentType)
       val count = entityAs[CommandResult].count
       count should ===(1)
+    }
+  }
+
+  private def insertAndCheckFailedRequest(insert: HttpRequest): Any = {
+    insert ~> mod.routes ~> check {
+      val  expectedStatusCode = StatusCodes.PreconditionFailed
+      val contentType = ContentTypes.`text/plain(UTF-8)`
+      if (expectedStatusCode !== status) println(s"*** Response body: $responseEntity")
+
+      status should ===(expectedStatusCode)
+      contentType should ===(contentType)
     }
   }
 }
