@@ -22,7 +22,7 @@ object AkkaMain extends App with StrictLogging {
   logger.info(s"Server config: $server")
 
   val mod = new AkkaModule(cfg)
-  mod.init().failed.foreach(t => logger.error("Failed to initialize Trips module", t))
+  mod.init().failed.foreach(t => logger.error("Failed to initialize Accounts module", t))
 
   val serverBinding = Http().bindAndHandle(mod.routes, server.host.value, server.port.value)
 
