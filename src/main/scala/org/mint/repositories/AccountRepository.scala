@@ -14,7 +14,7 @@ class AccountRepository(db: Database) extends Repository[Future] {
     ,"name" -> accounts.sortBy(_.name)
     ,"accountType" -> accounts.sortBy(_.accountType)
     ,"company" -> accounts.sortBy(_.company)
-    ,"myAccount" -> accounts.sortBy(_.myAccount)
+    ,"isMyAccount" -> accounts.sortBy(_.isMyAccount)
   )
 
   override def insert(acc: Account): Future[Int] = db.run(accounts += acc)
@@ -32,23 +32,23 @@ class AccountRepository(db: Database) extends Repository[Future] {
 
   def dropSchema(): FixedSqlAction[Unit, NoStream, Effect.Schema] = accounts.schema.drop
 
-  class Accounts(tag: Tag) extends Table[Account](tag, "accounts") {
+  class Accounts(tag: Tag) extends Table[Account](tag, "account") {
     def * =
-      (id, name, accountType, company, myAccount, active, mappingFile) <>
+      (id, name, accountType, company, isMyAccount, isActive, mappingFile) <>
         (Account.tupled, Account.unapply)
 
     def id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
 
     def name: Rep[String] = column[String]("name")
 
-    def accountType: Rep[String] = column[String]("accountType")
+    def accountType: Rep[String] = column[String]("account_type")
 
     def company: Rep[String] = column[String]("company")
 
-    def myAccount: Rep[Boolean] = column[Boolean]("myAccount")
+    def isMyAccount: Rep[Boolean] = column[Boolean]("is_my_account")
 
-    def active: Rep[Boolean] = column[Boolean]("active")
+    def isActive: Rep[Boolean] = column[Boolean]("is_active")
 
-    def mappingFile: Rep[String] = column[String]("mappingFile")
+    def mappingFile: Rep[String] = column[String]("mapping_file")
   }
 }
