@@ -32,7 +32,7 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
     validateAccount(account).flatMap(_ =>
       validateAccountDoesNotExist(account).flatMap(a => {
         a match {
-          case true => M.raiseError(InvalidAccount(account, "completed account must have non-empty 'company'"))
+          case true => M.raiseError(InvalidAccount(account, "completed account already exists"))
           case false => repo.insert(account)
         }
       }
