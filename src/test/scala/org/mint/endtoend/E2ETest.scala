@@ -72,8 +72,6 @@ class E2ETest
     insert ~> mod.routes ~> check {
       val  expectedStatusCode = StatusCodes.OK
       val contentType = ContentTypes.`application/json`
-      if (expectedStatusCode !== status) println(s"*** Response body: $responseEntity")
-
       status should ===(expectedStatusCode)
       contentType should ===(contentType)
       val count = entityAs[CommandResult].count

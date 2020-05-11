@@ -14,6 +14,7 @@ object TestData {
   val geneva: Account = Account(2, "geneva", "test", "Credit Suisse", true, true, "mapping file")
   val paris: Account = Account(3, "paris", "test", "Banque National Paris", true, false, "mapping file")
   val madrid: Account = Account(4, "madrid", "test", "Banco Mare Nostrun", true, false, "mapping file")
+  val brussels: Account = Account(4, "brussels", "test", "Crédit Agricole Group", true, false, "mapping file")
   val mockData: IndexedSeq[Account] =
     IndexedSeq(
       geneva,

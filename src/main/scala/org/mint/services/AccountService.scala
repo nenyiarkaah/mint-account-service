@@ -1,5 +1,6 @@
 package org.mint.services
 
+import akka.actor.ActorSystem
 import cats.MonadError
 import cats.syntax.flatMap._
 import cats.syntax.functor._
@@ -7,12 +8,15 @@ import org.mint.Exceptions.{InvalidAccount, UnknownSortField}
 import org.mint.models.Account
 import org.mint.repositories.Repository
 import org.mint.services.AccountService._
+import com.typesafe.scalalogging.StrictLogging
 
 import scala.language.higherKinds
 
-class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwable]) extends AccountAlg[F] {
+class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwable]) extends AccountAlg[F] with StrictLogging {
 
-  private val validateAccount: Account => F[Unit] = {
+  val system: ActorSystem = ActorSystem("accounts-service")
+
+  private val validateAccount: Account => F[Account] = {
     case a@Account(_, "", _, _, _, _, _) =>
       M.raiseError(InvalidAccount(a, "completed account must have non-empty 'name'"))
     case a@Account(_, null, _, _, _, _, _) =>
@@ -25,25 +29,23 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
       M.raiseError(InvalidAccount(a, "completed account must have non-empty 'company'"))
     case a@Account(_, _, _, null, _, _, _) =>
       M.raiseError(InvalidAccount(a, "completed account must have non-empty 'company'"))
-    case _ => M.pure(())
+    case a@Account(_, _, _, _, _, _, _) => M.pure((a))
   }
 
   override def insert(account: Account): F[Int] = {
-    validateAccount(account).flatMap(_ =>
-      validateAccountDoesNotExist(account).flatMap(a => {
-        a match {
-          case true => M.raiseError(InvalidAccount(account, "completed account already exists"))
-          case false => repo.insert(account)
-        }
-      }
-      )
-    )
+      for {
+        validatedByFields <- validateAccount(account)
+        validatedByName <- validateAccountDoesNotExist(validatedByFields)
+        id <- repo.insert(validatedByName)
+      } yield id
   }
 
-  private def validateAccountDoesNotExist(a: Account): F[Boolean] = {
-    val name = a.name
-    val accounts = selectAll(Some(DefaultPage), Some(DefaultPageSize), Some(DefaultSortField))
-    doesAccountNameAlreadyExist(name, accounts)
+  private def validateAccountDoesNotExist(a: Account): F[Account] = {
+    val pageSize = 1000
+    for {
+      existingAccounts <- selectAll(Some(DefaultPage), Some(pageSize), Some(DefaultSortField))
+      doesAccountNameAlreadyExist <- doesAccountNameAlreadyExist(a, existingAccounts)
+    } yield doesAccountNameAlreadyExist
   }
 
   override def selectAll(page: Option[Int], pageSize: Option[Int], sort: Option[String]): F[Seq[Account]] = {
@@ -61,13 +63,20 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
     }
   }
 
-  private def doesAccountNameAlreadyExist(name: String, accounts: F[Seq[Account]]): F[Boolean] = {
+  private def doesAccountNameAlreadyExist(account: Account, accounts: Seq[Account]): F[Account] = {
+    val name = account.name
     val names = getAccountNames(accounts)
-    names.map(_.contains(name))
+    val isNameInAccountsList = names.contains(name)
+    isNameInAccountsList match {
+      case false =>
+        M.pure(account)
+      case _ =>
+        M.raiseError(InvalidAccount(account, "completed account already exists"))
+    }
   }
 
-  private def getAccountNames(accounts: F[Seq[Account]]): F[Seq[String]] = {
-    accounts.map(a => a.map(_.name))
+  private def getAccountNames(accounts: Seq[Account]): Seq[String] = {
+    accounts.map(_.name)
   }
 }
 

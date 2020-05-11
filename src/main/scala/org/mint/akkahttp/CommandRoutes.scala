@@ -25,13 +25,13 @@ class CommandRoutes(service: AccountService[Future])(
   def prefix(r: Route): Route = pathPrefix("api" / "accounts")(r)
 
   def routes: Route = {
-    lazy val log = Logging(system, getClass)
+      lazy val log = Logging(system, getClass)
 
     val route = prefix {
       pathEndOrSingleSlash {
         post {
           entity(as[Account]) { account =>
-            log.debug("Create new trip '{}'", account)
+            log.debug("Create new account '{}'", account)
             val inserted = service.insert(account)
             complete {
               toCommandResponse(inserted, CommandResult)
