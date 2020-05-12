@@ -28,6 +28,10 @@ class AccountRepository(db: Database) extends Repository[Future] {
     }
   }
 
+  override def selectAllEntities: Future[Seq[Account]] = {
+      db.run(accounts.result)
+  }
+
   override def sortingFields: Set[String] = sorting.keys.toSet
 
   def dropSchema(): FixedSqlAction[Unit, NoStream, Effect.Schema] = accounts.schema.drop

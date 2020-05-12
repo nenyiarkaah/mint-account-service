@@ -41,9 +41,8 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
   }
 
   private def validateAccountDoesNotExist(a: Account): F[Account] = {
-    val pageSize = 1000
     for {
-      existingAccounts <- selectAll(Some(DefaultPage), Some(pageSize), Some(DefaultSortField))
+      existingAccounts <- selectAllEntities
       doesAccountNameAlreadyExist <- doesAccountNameAlreadyExist(a, existingAccounts)
     } yield doesAccountNameAlreadyExist
   }
@@ -61,6 +60,10 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
         .selectAll(pageN, size, sort)
         .map(Seq[Account])
     }
+  }
+
+  override def selectAllEntities: F[Seq[Account]] = {
+    repo.selectAllEntities
   }
 
   private def doesAccountNameAlreadyExist(account: Account, accounts: Seq[Account]): F[Account] = {
