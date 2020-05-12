@@ -56,10 +56,18 @@ class E2ETest
       val secondInsert = insertRequest(madrid)
       insertAndCheckFailedRequest(secondInsert)
     }
+    "return a 412 Precondition Failed request when inserting account that is already inserted but the name has a different case" in {
+      val insert = insertRequest(madrid)
+      insertAndCheckSuccessfulRequest(insert)
+
+      val secondInsert = insertRequest(madridWithUppercaseName)
+      insertAndCheckFailedRequest(secondInsert)
+    }
     "return a 412 Precondition Failed request when inserting account with missing name" in {
       val insert = insertRequest(berlinWithEmptyName)
       insertAndCheckFailedRequest(insert)
     }
+
   }
 
   private def insertData(): Unit =

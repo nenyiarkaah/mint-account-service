@@ -52,6 +52,10 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
       val resultException = service.insert(madrid)
       recoverToSucceededIf[InvalidAccount](resultException)
     }
+    "raise an error if an account of the same name already exists and is of a different case" in {
+      val resultException = service.insert(madridWithUppercaseName)
+      recoverToSucceededIf[InvalidAccount](resultException)
+    }
   }
 
   "selectAll" should {

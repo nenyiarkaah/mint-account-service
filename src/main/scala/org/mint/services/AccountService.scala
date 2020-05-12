@@ -69,7 +69,10 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
   private def doesAccountNameAlreadyExist(account: Account, accounts: Seq[Account]): F[Account] = {
     val name = account.name
     val names = getAccountNames(accounts)
-    val isNameInAccountsList = names.contains(name)
+    val isNameInAccountsList = names
+      .map(_.equalsIgnoreCase(name))
+      .foldLeft(false)(_ || _)
+
     isNameInAccountsList match {
       case false =>
         M.pure(account)
