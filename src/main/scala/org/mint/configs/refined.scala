@@ -8,5 +8,5 @@ import eu.timepit.refined.string.MatchesRegex
 object refined {
   type ConnectionTimeout = Int Refined Interval.OpenClosed[W.`0`.T, W.`100000`.T]
   type MaxPoolSize = Int Refined Interval.OpenClosed[W.`0`.T, W.`100`.T]
-  type JdbcUrl = String Refined MatchesRegex[W.`"""jdbc:\\w+://\\w+:[0-9]{4,5}/\\w+"""`.T]
+  type JdbcUrl = String Refined MatchesRegex[W.`"""jdbc:[a-z]+://[a-zA-Z0-9-.]+:[0-9]+;databaseName=[a-z-_]+"""`.T]
 }
