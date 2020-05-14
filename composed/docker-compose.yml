@@ -1,0 +1,16 @@
+version: '2.2'
+services:
+
+  mint-account-service:
+    image: mint-account-service:0.1.0
+    container_name: mint-account-service
+    mem_limit: 2g
+    environment:
+      - APP_CONFIG_PATH=/opt/conf/application.conf
+    env_file:
+      - .env
+    volumes:
+      - ./config/application.conf:/opt/conf/application.conf
+      - ./config/logback.xml:/opt/conf/logback.xml
+    ports:
+      - 8080:8080
