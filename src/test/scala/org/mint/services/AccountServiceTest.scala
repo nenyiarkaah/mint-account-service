@@ -17,11 +17,21 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
   val service = wire[AccountService[Future]]
 
   "insert" should {
-    "insert new account and return it's id" in {
+    "insert new account and return it's id of 1 " in {
       whenReady(service.insert(berlin)) {
         result =>
           val expectedId = 1
           result should equal(expectedId)
+      }
+    }
+    "insert new account and return it's id when there are already existing accounts" in {
+      whenReady(service.insert(berlin)) {
+        result =>
+        whenReady(service.insert(brussels)) {
+          result =>
+            val expectedId = 5
+            result should equal(expectedId)
+        }
       }
     }
     "raise an error when name is null" in {
@@ -73,7 +83,7 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
 
   private def createStubRepo = {
     new Repository[Future] {
-      override def insert(row: Account): Future[Int] = Future.successful(accountId)
+      override def insert(row: Account): Future[Int] = Future.successful(row.id)
 
       override def createSchema(): Future[Unit] = Future.successful(())
 

@@ -17,7 +17,7 @@ class AccountRepository(db: Database) extends Repository[Future] {
     ,"isMyAccount" -> accounts.sortBy(_.isMyAccount)
   )
 
-  override def insert(acc: Account): Future[Int] = db.run(accounts += acc)
+  override def insert(acc: Account): Future[Int] = db.run((accounts returning accounts.map(_.id)) += acc)
 
   override def createSchema(): Future[Unit] = db.run(accounts.schema.create)
 

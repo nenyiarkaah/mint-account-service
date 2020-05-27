@@ -50,17 +50,17 @@ class E2ETest
       insertData()
     }
     "return a 412 Precondition Failed request when inserting account that is already inserted" in {
-      val insert = insertRequest(madrid)
-      insertAndCheckSuccessfulRequest(insert)
+      val insert = insertRequest(berlin)
+      insertAndCheckSuccessfulRequest(insert, berlin.id)
 
-      val secondInsert = insertRequest(madrid)
+      val secondInsert = insertRequest(berlin)
       insertAndCheckFailedRequest(secondInsert)
     }
     "return a 412 Precondition Failed request when inserting account that is already inserted but the name has a different case" in {
-      val insert = insertRequest(madrid)
-      insertAndCheckSuccessfulRequest(insert)
+      val insert = insertRequest(berlin)
+      insertAndCheckSuccessfulRequest(insert, berlin.id)
 
-      val secondInsert = insertRequest(madridWithUppercaseName)
+      val secondInsert = insertRequest(berlinWithUppercaseName)
       insertAndCheckFailedRequest(secondInsert)
     }
     "return a 412 Precondition Failed request when inserting account with missing name" in {
@@ -71,19 +71,21 @@ class E2ETest
   }
 
   private def insertData(): Unit =
-    mockData.foreach { t =>
+    mockDataForEndToEnd.foreach { t =>
+      var id = 1
       val insert = insertRequest(t)
-      insertAndCheckSuccessfulRequest(insert)
+      insertAndCheckSuccessfulRequest(insert, t.id)
+      id = 1
     }
 
-  private def insertAndCheckSuccessfulRequest(insert: HttpRequest): Any = {
+  private def insertAndCheckSuccessfulRequest(insert: HttpRequest, expectedId: Int): Any = {
     insert ~> mod.routes ~> check {
       val  expectedStatusCode = StatusCodes.OK
       val contentType = ContentTypes.`application/json`
       status should ===(expectedStatusCode)
       contentType should ===(contentType)
-      val count = entityAs[CommandResult].count
-      count should ===(1)
+      val id = entityAs[CommandResult].id
+      id should ===(expectedId)
     }
   }
 
