@@ -25,29 +25,31 @@ class CommandRoutes(service: AccountService[Future])(
   def prefix(r: Route): Route = pathPrefix("api" / "accounts")(r)
 
   def routes: Route = {
-      lazy val log = Logging(system, getClass)
+    lazy val log = Logging(system, getClass)
 
     val route = prefix {
-      pathEndOrSingleSlash {
-        post {
-          entity(as[Account]) { account =>
-            log.debug("Create new account '{}'", account)
-            val inserted = service.insert(account)
-            complete {
-              toCommandResponse(inserted, CommandResult)
+      concat(
+        pathEndOrSingleSlash {
+          post {
+            entity(as[Account]) { account =>
+              log.debug("Create new account '{}'", account)
+              val inserted = service.insert(account)
+              complete {
+                toCommandResponse(inserted, CommandResult)
+              }
             }
           }
         }
-      }
+      )
     }
-        corsHandler(route)
+    corsHandler(route)
   }
 
     private def toCommandResponse[T](
-                                      count: Future[Int],
+                                      id: Future[Int],
                                       f: Int => T
                                     )(implicit w: GenericJsonWriter[T], ec: ExecutionContext): Future[HttpResponse] =
-    count.transformWith {
+    id.transformWith {
       case Success(i) =>
         val e = HttpEntity(ContentTypes.`application/json`, w.toJsonString(f(i)))
         Future.successful(HttpResponse(StatusCodes.OK, entity = e))

@@ -34,19 +34,19 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
         }
       }
     }
-    "raise an error when name is null" in {
+    "raise an error when account name is null" in {
       val resultException = service.insert(berlinWithNullName)
       recoverToSucceededIf[InvalidAccount](resultException)
     }
-    "raise an error when name is empty string" in {
+    "raise an error when account name is empty string" in {
       val resultException = service.insert(berlinWithEmptyName)
       recoverToSucceededIf[InvalidAccount](resultException)
     }
-    "raise an error when AccountType is null" in {
+    "raise an error when account type is null" in {
       val resultException = service.insert(berlinWithNullAccountType)
       recoverToSucceededIf[InvalidAccount](resultException)
     }
-    "raise an error when AccountType is empty string" in {
+    "raise an error when account type is empty string" in {
       val resultException = service.insert(berlinWithEmptyAccountType)
       recoverToSucceededIf[InvalidAccount](resultException)
     }
@@ -68,18 +68,7 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
     }
   }
 
-  "selectAll" should {
-    "return a list of accounts" in {
-      val page = Some(1)
-      val pageSize = Some(1)
-      val sort = Some("id")
-      whenReady(service.selectAll(page, pageSize, sort)) {
-        result =>
-          val expectedResult = accounts
-          result should equal(expectedResult)
-      }
-    }
-  }
+
 
   private def createStubRepo = {
     new Repository[Future] {
@@ -87,9 +76,9 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
 
       override def createSchema(): Future[Unit] = Future.successful(())
 
-      override def selectAll(page: Int, pageSize: Int, sort: String): Future[Seq[Account]] = Future.successful(mockData)
+      override def selectAll(page: Int, pageSize: Int, sort: String): Future[Seq[Account]] = ???
 
-      override def sortingFields: Set[String] = Set("id", "name")
+      override def sortingFields: Set[String] = ???
 
       override def selectAllEntities: Future[Seq[Account]] = Future.successful(mockData)
     }
