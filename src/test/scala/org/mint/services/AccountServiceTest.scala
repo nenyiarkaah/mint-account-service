@@ -4,7 +4,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import cats.instances.future.catsStdInstancesForFuture
 import com.softwaremill.macwire.wire
 import org.mint.Exceptions.InvalidAccount
-import org.mint.models.Account
+import org.mint.models.{Account, Accounts}
 import org.mint.repositories.Repository
 import org.mint.services.AccountService
 import org.mint.utils.TestData._

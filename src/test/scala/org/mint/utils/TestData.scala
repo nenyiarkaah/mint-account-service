@@ -1,6 +1,6 @@
 package org.mint.utils
 
-import org.mint.models.Account
+import org.mint.models.{Account, Accounts}
 
 object TestData {
   val accountId = 1

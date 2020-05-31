@@ -10,4 +10,7 @@ object RequestSupport {
     val entity = HttpEntity(MediaTypes.`application/json`, w.toJsonString(e))
     HttpRequest(uri = prefix, method = HttpMethods.POST, entity = entity)
   }
+
+  def selectAllRequest(): HttpRequest =
+    HttpRequest(uri = prefix)
 }

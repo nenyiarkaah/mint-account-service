@@ -5,7 +5,7 @@ import cats.MonadError
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import org.mint.Exceptions.{InvalidAccount, UnknownSortField}
-import org.mint.models.Account
+import org.mint.models.{Account, Accounts}
 import org.mint.repositories.Repository
 import org.mint.services.AccountService._
 import com.typesafe.scalalogging.StrictLogging
@@ -13,6 +13,7 @@ import com.typesafe.scalalogging.StrictLogging
 import scala.language.higherKinds
 
 class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwable]) extends AccountAlg[F] with StrictLogging {
+
 
   val system: ActorSystem = ActorSystem("accounts-service")
 
@@ -40,6 +41,9 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
       } yield id
   }
 
+  def selectAllAccountType: F[Seq[String]]  = ???
+
+
   private def validateAccountDoesNotExist(a: Account): F[Account] = {
     for {
       existingAccounts <- selectAllEntities
@@ -47,7 +51,7 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
     } yield doesAccountNameAlreadyExist
   }
 
-  override def selectAll(page: Option[Int], pageSize: Option[Int], sort: Option[String]): F[Seq[Account]] = {
+  override def selectAll(page: Option[Int], pageSize: Option[Int], sort: Option[String]): F[Accounts] = {
     val sortBy = sort
       .map(s => repo.sortingFields.find(_ == s).toRight(UnknownSortField(s)))
       .getOrElse(Right(DefaultSortField))
@@ -58,7 +62,7 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
 
       repo
         .selectAll(pageN, size, sort)
-        .map(Seq[Account])
+        .map(Accounts)
     }
   }
 
@@ -84,6 +88,7 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
   private def getAccountNames(accounts: Seq[Account]): Seq[String] = {
     accounts.map(_.name)
   }
+
 }
 
 object AccountService {
