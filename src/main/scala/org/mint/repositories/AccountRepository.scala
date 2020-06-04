@@ -28,7 +28,7 @@ class AccountRepository(db: Database) extends Repository[Future] {
     }
   }
 
-  override def selectAllEntities: Future[Seq[Account]] = {
+  override def selectAll: Future[Seq[Account]] = {
       db.run(accounts.result)
   }
 

@@ -46,7 +46,7 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
 
   private def validateAccountDoesNotExist(a: Account): F[Account] = {
     for {
-      existingAccounts <- selectAllEntities
+      existingAccounts <- selectAll
       doesAccountNameAlreadyExist <- doesAccountNameAlreadyExist(a, existingAccounts)
     } yield doesAccountNameAlreadyExist
   }
@@ -66,8 +66,8 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
     }
   }
 
-  override def selectAllEntities: F[Seq[Account]] = {
-    repo.selectAllEntities
+  override def selectAll: F[Seq[Account]] = {
+    repo.selectAll
   }
 
   private def doesAccountNameAlreadyExist(account: Account, accounts: Seq[Account]): F[Account] = {
