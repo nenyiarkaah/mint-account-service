@@ -5,7 +5,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.dimafeng.testcontainers.{ForAllTestContainer, MSSQLServerContainer}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.mint.json.SprayJsonFormat._
-import org.mint.models.CommandResult
+import org.mint.models.{Accounts, CommandResult}
 import org.mint.modules.AkkaModule
 import org.mint.utils.RequestSupport._
 import org.mint.utils.TestData._
@@ -68,6 +68,26 @@ class E2ETest
       insertAndCheckFailedRequest(insert)
     }
 
+    "selectAll" should {
+      "return a list of accounts" in {
+        val page = Some(1)
+        val pageSize = Some(1)
+        val sort = Some("id")
+        val request = selectAllRequest
+        insertData
+
+        request ~> mod.routes ~> check {
+          status shouldEqual StatusCodes.OK
+          contentType shouldEqual ContentTypes.`application/json`
+          val accounts = entityAs[Accounts].accounts
+          accounts.length shouldEqual 3
+          accounts should contain(geneva)
+          accounts should contain(paris)
+          accounts should contain(berlin)
+          accounts shouldEqual Seq(berlin, geneva, paris)
+        }
+      }
+    }
   }
 
   private def insertData(): Unit =
@@ -82,10 +102,10 @@ class E2ETest
     insert ~> mod.routes ~> check {
       val  expectedStatusCode = StatusCodes.OK
       val contentType = ContentTypes.`application/json`
-      status should ===(expectedStatusCode)
-      contentType should ===(contentType)
+      status shouldEqual expectedStatusCode
+      contentType shouldEqual contentType
       val id = entityAs[CommandResult].id
-      id should ===(expectedId)
+      id shouldEqual expectedId
     }
   }
 
@@ -95,8 +115,8 @@ class E2ETest
       val contentType = ContentTypes.`text/plain(UTF-8)`
       if (expectedStatusCode !== status) println(s"*** Response body: $responseEntity")
 
-      status should ===(expectedStatusCode)
-      contentType should ===(contentType)
+      status shouldEqual expectedStatusCode
+      contentType shouldEqual contentType
     }
   }
 }

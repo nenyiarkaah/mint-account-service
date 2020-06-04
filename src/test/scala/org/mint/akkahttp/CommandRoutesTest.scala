@@ -34,21 +34,21 @@ class CommandRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
       val request = insertRequest(berlinWithEmptyName)
 
       request ~> routes ~> check {
-        status should ===(StatusCodes.PreconditionFailed)
+        status shouldEqual StatusCodes.PreconditionFailed
       }
     }
     "reject a new account when account type is empty" in {
       val request = insertRequest(berlinWithEmptyAccountType)
 
       request ~> routes ~> check {
-        status should ===(StatusCodes.PreconditionFailed)
+        status shouldEqual StatusCodes.PreconditionFailed
       }
     }
     "reject a new account when company is empty" in {
       val request = insertRequest(berlinWithEmptyCompany)
 
       request ~> routes ~> check {
-        status should ===(StatusCodes.PreconditionFailed)
+        status shouldEqual StatusCodes.PreconditionFailed
       }
     }
   }

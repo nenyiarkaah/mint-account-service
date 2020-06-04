@@ -13,4 +13,7 @@ object RequestSupport {
 
   def selectAllRequest(): HttpRequest =
     HttpRequest(uri = prefix)
+
+  def selectAllRequest(sort: String): HttpRequest =
+    HttpRequest(uri = s"$prefix?sort=$sort")
 }

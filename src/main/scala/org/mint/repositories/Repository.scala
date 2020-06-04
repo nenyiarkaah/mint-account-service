@@ -1,6 +1,6 @@
 package org.mint.repositories
 
-import org.mint.models.{Account, Accounts}
+import org.mint.models.{Account}
 
 trait Repository[F[_]] {
   def selectAll(page: Int, pageSize: Int, sort: String): F[Seq[Account]]
