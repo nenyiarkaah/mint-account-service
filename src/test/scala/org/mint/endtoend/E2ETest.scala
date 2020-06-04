@@ -5,7 +5,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.dimafeng.testcontainers.{ForAllTestContainer, MSSQLServerContainer}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.mint.json.SprayJsonFormat._
-import org.mint.models.{Accounts, CommandResult}
+import org.mint.models.{Account, Accounts, CommandResult}
 import org.mint.modules.AkkaModule
 import org.mint.utils.RequestSupport._
 import org.mint.utils.TestData._
@@ -47,7 +47,7 @@ class E2ETest
 
   "insert" should {
     "return 200 when inserting new accounts into empty database" in {
-      insertData()
+      insertData(mockDataForEndToEnd)
     }
     "return a 412 Precondition Failed request when inserting account that is already inserted" in {
       val insert = insertRequest(berlin)
@@ -69,12 +69,9 @@ class E2ETest
     }
 
     "selectAll" should {
-      "return a list of accounts" in {
-        val page = Some(1)
-        val pageSize = Some(1)
-        val sort = Some("id")
+      "return a list of accounts sorted by id" in {
         val request = selectAllRequest
-        insertData
+        insertData(mockDataForEndToEnd)
 
         request ~> mod.routes ~> check {
           status shouldEqual StatusCodes.OK
@@ -87,11 +84,30 @@ class E2ETest
           accounts shouldEqual Seq(berlin, geneva, paris)
         }
       }
+      "return a list of accounts sorted by name" in {
+        val page = Some(1)
+        val pageSize = Some(1)
+        val sort = "name"
+        val request = selectAllRequest(sort)
+        insertData(mockDataForEndToEndSecondary)
+
+        request ~> mod.routes ~> check {
+          status shouldEqual StatusCodes.OK
+          contentType shouldEqual ContentTypes.`application/json`
+          val accounts = entityAs[Accounts].accounts
+          accounts.length shouldEqual 4
+          accounts should contain(geneva)
+          accounts should contain(paris)
+          accounts should contain(berlin)
+          accounts should contain(madrid)
+          accounts shouldEqual Seq(berlin, geneva, madrid, paris)
+        }
+      }
     }
   }
 
-  private def insertData(): Unit =
-    mockDataForEndToEnd.foreach { t =>
+  private def insertData(accounts: IndexedSeq[Account]): Unit =
+    accounts.foreach { t =>
       var id = 1
       val insert = insertRequest(t)
       insertAndCheckSuccessfulRequest(insert, t.id)

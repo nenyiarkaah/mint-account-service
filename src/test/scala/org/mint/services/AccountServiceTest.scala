@@ -12,7 +12,7 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{AsyncWordSpecLike, Matchers}
 
 import scala.concurrent.Future
-@Deprecated
+
 class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestRouteTest with ScalaFutures with MockitoSugar {
   val mockRepository = mock[AccountRepository]
   val service = new AccountService[Future](mockRepository)
