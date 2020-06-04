@@ -42,7 +42,8 @@ lazy val root = (project in file("."))
       "com.dimafeng" %% "testcontainers-scala-mssqlserver" % "0.36.0" % Test,
       "org.testcontainers" % "mssqlserver" % "1.9.1" % Test,
       "com.storm-enroute" %% "scalameter-core" % "0.10.1" % Test,
-      "com.microsoft.sqlserver" % "mssql-jdbc" % "8.2.2.jre8"
+      "com.microsoft.sqlserver" % "mssql-jdbc" % "8.2.2.jre8",
+      "org.mockito" % "mockito-core" % "3.3.3"
     ),
     dockerBaseImage := "openjdk:8-jre-alpine",
     Test / fork := true,
