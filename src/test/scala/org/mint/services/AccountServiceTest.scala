@@ -2,36 +2,39 @@ package org.mint.services
 
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import cats.instances.future.catsStdInstancesForFuture
-import com.softwaremill.macwire.wire
 import org.mint.Exceptions.InvalidAccount
-import org.mint.models.{Account, Accounts}
-import org.mint.repositories.Repository
-import org.mint.services.AccountService
+import org.mint.repositories.AccountRepository
 import org.mint.utils.TestData._
+import org.mockito.ArgumentMatchers._
+import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{AsyncWordSpecLike, Matchers}
 
 import scala.concurrent.Future
-
-class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestRouteTest with ScalaFutures {
-  val service = wire[AccountService[Future]]
+@Deprecated
+class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestRouteTest with ScalaFutures with MockitoSugar {
+  val mockRepository = mock[AccountRepository]
+  val service = new AccountService[Future](mockRepository)
+  when(mockRepository.sortingFields) thenReturn(Set("id", "name"))
 
   "insert" should {
     "insert new account and return it's id of 1 " in {
+      val expectedId = 2
+      when(mockRepository.selectAll) thenReturn(Future(mockData))
+      when(mockRepository.insert(berlin)) thenReturn(Future(expectedId))
       whenReady(service.insert(berlin)) {
         result =>
-          val expectedId = 1
           result should equal(expectedId)
       }
     }
     "insert new account and return it's id when there are already existing accounts" in {
-      whenReady(service.insert(berlin)) {
+      val expectedId = 5
+      when(mockRepository.selectAll) thenReturn(Future(Seq(berlin)))
+      when(mockRepository.insert(brussels)) thenReturn(Future(expectedId))
+      whenReady(service.insert(brussels)) {
         result =>
-        whenReady(service.insert(brussels)) {
-          result =>
-            val expectedId = 5
-            result should equal(expectedId)
-        }
+          result should equal(expectedId)
       }
     }
     "raise an error when account name is null" in {
@@ -59,6 +62,8 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
       recoverToSucceededIf[InvalidAccount](resultException)
     }
     "raise an error if an account of the same name already exists" in {
+      when(service.selectAll) thenReturn(Future(Seq(madrid)))
+
       val resultException = service.insert(madrid)
       recoverToSucceededIf[InvalidAccount](resultException)
     }
@@ -66,21 +71,51 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
       val resultException = service.insert(madridWithUppercaseName)
       recoverToSucceededIf[InvalidAccount](resultException)
     }
+
   }
 
+  "selectAll" should {
+    "return a list of accounts sorted by id with no null parameters" in {
+      val accounts = Seq(paris, madrid, brussels)
+      when(mockRepository.selectAll(any[Int], any[Int], any[String])) thenReturn
+        Future.successful (accounts.sortBy(_.id))
 
+      whenReady(service.selectAll(None, None, None))
+      {
+        result =>
+          val accounts = result.accounts
+          accounts.length shouldEqual 3
+          accounts should contain(brussels)
+          accounts should contain(paris)
+          accounts should contain(madrid)
+          accounts shouldEqual Seq(paris, madrid, brussels)
+      }
+    }
+    "return a list of accounts sorted by id" in {
+      val accounts = Seq(paris, madrid, brussels)
+      when(mockRepository.selectAll(anyInt, anyInt, matches("id"))) thenReturn
+        Future.successful (accounts.sortBy(_.id))
 
-  private def createStubRepo = {
-    new Repository[Future] {
-      override def insert(row: Account): Future[Int] = Future.successful(row.id)
+      whenReady(service.selectAll(None, None, Some("id")))
+      {
+        result =>
+          val accounts = result.accounts
+          accounts.length shouldEqual 3
+          accounts shouldEqual Seq(paris, madrid, brussels)
+      }
+    }
+    "return a list of accounts sorted by name" in {
+      val accounts = Seq(paris, madrid, brussels)
+      when(mockRepository.selectAll(anyInt, anyInt, matches("name"))) thenReturn
+        Future.successful (accounts.sortBy(_.name))
 
-      override def createSchema(): Future[Unit] = Future.successful(())
-
-      override def selectAll(page: Int, pageSize: Int, sort: String): Future[Seq[Account]] = ???
-
-      override def sortingFields: Set[String] = ???
-
-      override def selectAllEntities: Future[Seq[Account]] = Future.successful(mockData)
+      whenReady(service.selectAll(None, None, Some("name")))
+      {
+        result =>
+          val accounts = result.accounts
+          accounts.length shouldEqual 3
+          accounts shouldEqual Seq(brussels, madrid, paris)
+      }
     }
   }
 }
