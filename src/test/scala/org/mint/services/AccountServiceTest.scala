@@ -118,4 +118,17 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
       }
     }
   }
+
+  "existingTypeofAccounts" should {
+    "return a distinct list of 2 account types" in {
+      when(mockRepository.selectAll) thenReturn(Future(mockData))
+      whenReady(service.existingTypeofAccounts) {
+        result =>
+          val typeofAccounts = result.accountTypes
+          typeofAccounts.length shouldEqual 2
+          typeofAccounts should contain("test")
+          typeofAccounts should contain("current")
+      }
+    }
+  }
 }

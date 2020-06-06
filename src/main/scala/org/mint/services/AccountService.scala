@@ -5,7 +5,7 @@ import cats.MonadError
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import org.mint.Exceptions.{InvalidAccount, UnknownSortField}
-import org.mint.models.{Account, Accounts}
+import org.mint.models.{Account, AccountTypes, Accounts}
 import org.mint.repositories.Repository
 import org.mint.services.AccountService._
 import com.typesafe.scalalogging.StrictLogging
@@ -41,14 +41,15 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
       } yield id
   }
 
-  def selectAllAccountType: F[Seq[String]]  = ???
-
-
-  private def validateAccountDoesNotExist(a: Account): F[Account] = {
+  override def existingTypeofAccounts: F[AccountTypes]  = {
     for {
       existingAccounts <- selectAll
-      doesAccountNameAlreadyExist <- doesAccountNameAlreadyExist(a, existingAccounts)
-    } yield doesAccountNameAlreadyExist
+    } yield existingTypeofAccounts(existingAccounts)
+  }
+
+  private def existingTypeofAccounts(existingAccounts: Seq[Account]) = {
+    val accountTypes = existingAccounts.map(_.accountType).distinct
+    AccountTypes(accountTypes)
   }
 
   override def selectAll(page: Option[Int], pageSize: Option[Int], sort: Option[String]): F[Accounts] = {
@@ -87,6 +88,13 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
 
   private def getAccountNames(accounts: Seq[Account]): Seq[String] = {
     accounts.map(_.name)
+  }
+
+  private def validateAccountDoesNotExist(a: Account): F[Account] = {
+    for {
+      existingAccounts <- selectAll
+      doesAccountNameAlreadyExist <- doesAccountNameAlreadyExist(a, existingAccounts)
+    } yield doesAccountNameAlreadyExist
   }
 
 }

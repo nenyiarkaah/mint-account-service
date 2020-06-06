@@ -11,9 +11,12 @@ object RequestSupport {
     HttpRequest(uri = prefix, method = HttpMethods.POST, entity = entity)
   }
 
-  def selectAllRequest(): HttpRequest =
+  def selectAllRequest: HttpRequest =
     HttpRequest(uri = prefix)
 
   def selectAllRequest(sort: String): HttpRequest =
     HttpRequest(uri = s"$prefix?sort=$sort")
+
+  def existingTypeofAccountsRequest: HttpRequest =
+    HttpRequest(uri = s"$prefix/existingtypeofaccounts")
 }

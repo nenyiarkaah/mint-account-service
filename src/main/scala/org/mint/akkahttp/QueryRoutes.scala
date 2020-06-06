@@ -7,7 +7,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import org.mint.json.GenericJsonWriter
-import org.mint.models.Accounts
+import org.mint.models.{AccountTypes, Accounts}
 import org.mint.services.AccountService
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -17,7 +17,8 @@ class QueryRoutes (service: AccountService[Future])(
   implicit ec: ExecutionContext,
   system: ActorSystem,
   w: GenericJsonWriter[Accounts],
-  ts: ToResponseMarshaller[Accounts]
+  ts: ToResponseMarshaller[Accounts],
+  actt: ToResponseMarshaller[AccountTypes]
 ) extends CORSHandler {
 
   def prefix(r: Route): Route = pathPrefix("api" / "accounts")(r)
@@ -35,6 +36,13 @@ class QueryRoutes (service: AccountService[Future])(
               complete(accounts)
             }
           }
+        },
+        path("existingtypeofaccounts"){
+          concat(pathEndOrSingleSlash {
+            log.debug("Existing type of accounts")
+            val typeOfAccounts = service.existingTypeofAccounts
+            complete(typeOfAccounts)
+          })
         }
       )
     }

@@ -67,6 +67,16 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
     }
   }
 
+  "existingTypeofAccounts" should {
+    "return a type of account list of 2 for mockData" in {
+      val request = existingTypeofAccountsRequest
+      request ~> routes ~> check {
+        status shouldEqual StatusCodes.OK
+        contentType shouldEqual ContentTypes.`application/json`
+      }
+    }
+  }
+
   private def createStubRepo = {
     new Repository[Future] {
       override def insert(row: Account): Future[Int] = ???
@@ -82,7 +92,7 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
 
       override def sortingFields: Set[String] = Set("id", "name")
 
-      override def selectAll: Future[Seq[Account]] = ???
+      override def selectAll: Future[Seq[Account]] = Future.successful (mockData)
     }
   }
 }

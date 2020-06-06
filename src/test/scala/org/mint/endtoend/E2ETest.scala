@@ -5,7 +5,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.dimafeng.testcontainers.{ForAllTestContainer, MSSQLServerContainer}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.mint.json.SprayJsonFormat._
-import org.mint.models.{Account, Accounts, CommandResult}
+import org.mint.models.{Account, AccountTypes, Accounts, CommandResult}
 import org.mint.modules.AkkaModule
 import org.mint.utils.RequestSupport._
 import org.mint.utils.TestData._
@@ -67,41 +67,55 @@ class E2ETest
       val insert = insertRequest(berlinWithEmptyName)
       insertAndCheckFailedRequest(insert)
     }
+  }
 
-    "selectAll" should {
-      "return a list of accounts sorted by id" in {
-        val request = selectAllRequest
-        insertData(mockDataForEndToEnd)
+  "selectAll" should {
+    "return a list of accounts sorted by id" in {
+      val request = selectAllRequest
+      insertData(mockDataForEndToEnd)
 
-        request ~> mod.routes ~> check {
-          status shouldEqual StatusCodes.OK
-          contentType shouldEqual ContentTypes.`application/json`
-          val accounts = entityAs[Accounts].accounts
-          accounts.length shouldEqual 3
-          accounts should contain(geneva)
-          accounts should contain(paris)
-          accounts should contain(berlin)
-          accounts shouldEqual Seq(berlin, geneva, paris)
-        }
+      request ~> mod.routes ~> check {
+        status shouldEqual StatusCodes.OK
+        contentType shouldEqual ContentTypes.`application/json`
+        val accounts = entityAs[Accounts].accounts
+        accounts.length shouldEqual 3
+        accounts should contain(geneva)
+        accounts should contain(paris)
+        accounts should contain(berlin)
+        accounts shouldEqual Seq(berlin, geneva, paris)
       }
-      "return a list of accounts sorted by name" in {
-        val page = Some(1)
-        val pageSize = Some(1)
-        val sort = "name"
-        val request = selectAllRequest(sort)
-        insertData(mockDataForEndToEndSecondary)
+    }
+    "return a list of accounts sorted by name" in {
+      val page = Some(1)
+      val pageSize = Some(1)
+      val sort = "name"
+      val request = selectAllRequest(sort)
+      insertData(mockDataForEndToEndSecondary)
 
-        request ~> mod.routes ~> check {
-          status shouldEqual StatusCodes.OK
-          contentType shouldEqual ContentTypes.`application/json`
-          val accounts = entityAs[Accounts].accounts
-          accounts.length shouldEqual 4
-          accounts should contain(geneva)
-          accounts should contain(paris)
-          accounts should contain(berlin)
-          accounts should contain(madrid)
-          accounts shouldEqual Seq(berlin, geneva, madrid, paris)
-        }
+      request ~> mod.routes ~> check {
+        status shouldEqual StatusCodes.OK
+        contentType shouldEqual ContentTypes.`application/json`
+        val accounts = entityAs[Accounts].accounts
+        accounts.length shouldEqual 4
+        accounts should contain(geneva)
+        accounts should contain(paris)
+        accounts should contain(berlin)
+        accounts should contain(madrid)
+        accounts shouldEqual Seq(berlin, geneva, madrid, paris)
+      }
+    }
+  }
+
+  "existingTypeofAccounts" should {
+    "return a distinct list of 2 account types" in {
+      val request = existingTypeofAccountsRequest
+      insertData(mockDataForEndToEndSecondary)
+
+      request ~> mod.routes ~> check {
+        status shouldEqual StatusCodes.OK
+        contentType shouldEqual ContentTypes.`application/json`
+        val typeOfAccounts = entityAs[AccountTypes].accountTypes
+        typeOfAccounts.length shouldEqual 2
       }
     }
   }
