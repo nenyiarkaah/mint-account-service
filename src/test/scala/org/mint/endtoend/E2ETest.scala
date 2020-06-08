@@ -45,63 +45,80 @@ class E2ETest
     Await.ready(mod.repo.createSchema(), 10.seconds)
   }
 
-  "insert" should {
-    "return 200 when inserting new accounts into empty database" in {
-      insertData(mockDataForEndToEnd)
-    }
-    "return a 412 Precondition Failed request when inserting account that is already inserted" in {
-      val insert = insertRequest(berlin)
-      insertAndCheckSuccessfulRequest(insert, berlin.id)
+  "account" should {
+    "insert" should {
+      "return 200 when inserting new accounts into empty database" in {
+        insertData(mockDataForEndToEnd)
+      }
+      "return a 412 Precondition Failed request when inserting account that is already inserted" in {
+        val insert = insertRequest(berlin)
+        insertAndCheckSuccessfulRequest(insert, berlin.id)
 
-      val secondInsert = insertRequest(berlin)
-      insertAndCheckFailedRequest(secondInsert)
-    }
-    "return a 412 Precondition Failed request when inserting account that is already inserted but the name has a different case" in {
-      val insert = insertRequest(berlin)
-      insertAndCheckSuccessfulRequest(insert, berlin.id)
+        val secondInsert = insertRequest(berlin)
+        insertAndCheckFailedRequest(secondInsert)
+      }
+      "return a 412 Precondition Failed request when inserting account that is already inserted but the name has a different case" in {
+        val insert = insertRequest(berlin)
+        insertAndCheckSuccessfulRequest(insert, berlin.id)
 
-      val secondInsert = insertRequest(berlinWithUppercaseName)
-      insertAndCheckFailedRequest(secondInsert)
-    }
-    "return a 412 Precondition Failed request when inserting account with missing name" in {
-      val insert = insertRequest(berlinWithEmptyName)
-      insertAndCheckFailedRequest(insert)
-    }
-  }
-
-  "selectAll" should {
-    "return a list of accounts sorted by id" in {
-      val request = selectAllRequest
-      insertData(mockDataForEndToEnd)
-
-      request ~> mod.routes ~> check {
-        status shouldEqual StatusCodes.OK
-        contentType shouldEqual ContentTypes.`application/json`
-        val accounts = entityAs[Accounts].accounts
-        accounts.length shouldEqual 3
-        accounts should contain(geneva)
-        accounts should contain(paris)
-        accounts should contain(berlin)
-        accounts shouldEqual Seq(berlin, geneva, paris)
+        val secondInsert = insertRequest(berlinWithUppercaseName)
+        insertAndCheckFailedRequest(secondInsert)
+      }
+      "return a 412 Precondition Failed request when inserting account with missing name" in {
+        val insert = insertRequest(berlinWithEmptyName)
+        insertAndCheckFailedRequest(insert)
       }
     }
-    "return a list of accounts sorted by name" in {
-      val page = Some(1)
-      val pageSize = Some(1)
-      val sort = "name"
-      val request = selectAllRequest(sort)
-      insertData(mockDataForEndToEndSecondary)
 
-      request ~> mod.routes ~> check {
-        status shouldEqual StatusCodes.OK
-        contentType shouldEqual ContentTypes.`application/json`
-        val accounts = entityAs[Accounts].accounts
-        accounts.length shouldEqual 4
-        accounts should contain(geneva)
-        accounts should contain(paris)
-        accounts should contain(berlin)
-        accounts should contain(madrid)
-        accounts shouldEqual Seq(berlin, geneva, madrid, paris)
+    "selectAll" should {
+      "return a list of accounts sorted by id" in {
+        val request = selectAllRequest
+        insertData(mockDataForEndToEnd)
+
+        request ~> mod.routes ~> check {
+          status shouldEqual StatusCodes.OK
+          contentType shouldEqual ContentTypes.`application/json`
+          val accounts = entityAs[Accounts].accounts
+          accounts.length shouldEqual 3
+          accounts should contain(geneva)
+          accounts should contain(paris)
+          accounts should contain(berlin)
+          accounts shouldEqual Seq(berlin, geneva, paris)
+        }
+      }
+      "return a list of accounts sorted by name" in {
+        val page = Some(1)
+        val pageSize = Some(1)
+        val sort = "name"
+        val request = selectAllRequest(sort)
+        insertData(mockDataForEndToEndSecondary)
+
+        request ~> mod.routes ~> check {
+          status shouldEqual StatusCodes.OK
+          contentType shouldEqual ContentTypes.`application/json`
+          val accounts = entityAs[Accounts].accounts
+          accounts.length shouldEqual 4
+          accounts should contain(geneva)
+          accounts should contain(paris)
+          accounts should contain(berlin)
+          accounts should contain(madrid)
+          accounts shouldEqual Seq(berlin, geneva, madrid, paris)
+        }
+      }
+    }
+
+    "update" should {
+      "update account by id" in {
+        insertData(mockDataForEndToEnd)
+        val id = berlin.id
+        val prefixedName = "updated " + berlin.name
+        val update = updateRequest(berlinWithPrefixedName, id)
+
+        update ~> mod.routes ~> check {
+          commonChecks
+          val result = entityAs[CommandResult].id
+          result shouldEqual id
+        }
       }
     }
   }
@@ -130,13 +147,18 @@ class E2ETest
 
   private def insertAndCheckSuccessfulRequest(insert: HttpRequest, expectedId: Int): Any = {
     insert ~> mod.routes ~> check {
-      val  expectedStatusCode = StatusCodes.OK
-      val contentType = ContentTypes.`application/json`
-      status shouldEqual expectedStatusCode
-      contentType shouldEqual contentType
+      commonChecks
       val id = entityAs[CommandResult].id
       id shouldEqual expectedId
     }
+  }
+
+  private def commonChecks = {
+    val expectedStatusCode = StatusCodes.OK
+    val contentType = ContentTypes.`application/json`
+    if (expectedStatusCode !== status) println(s"*** Response body: $responseEntity")
+    status shouldEqual expectedStatusCode
+    contentType shouldEqual contentType
   }
 
   private def insertAndCheckFailedRequest(insert: HttpRequest): Any = {

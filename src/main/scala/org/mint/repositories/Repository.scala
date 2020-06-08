@@ -8,4 +8,5 @@ trait Repository[F[_]] {
   def insert(row: Account): F[Int]
   def createSchema(): F[Unit]
   def sortingFields: Set[String]
+  def update(id: Int, row: Account): F[Int]
 }

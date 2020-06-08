@@ -23,8 +23,7 @@ class CommandRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
       val request = insertRequest(berlin)
 
       request ~> routes ~> check {
-        status shouldEqual StatusCodes.OK
-        contentType shouldEqual ContentTypes.`application/json`
+        commonChecks
         val count = entityAs[CommandResult].id
         val expectedId = 1
         count shouldEqual expectedId
@@ -53,6 +52,26 @@ class CommandRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
     }
   }
 
+
+  "update" should {
+    "update existing account with valid name and return it's id" in {
+      val request = updateRequest(berlin, berlin.id)
+      val expectedId = 1
+
+      request ~> routes ~> check {
+        commonChecks
+        val id = entityAs[CommandResult].id
+        id shouldEqual expectedId
+      }
+    }
+
+  }
+
+  private def commonChecks = {
+    status shouldEqual StatusCodes.OK
+    contentType shouldEqual ContentTypes.`application/json`
+  }
+
   private def createStubRepo = {
     new Repository[Future] {
       override def insert(row: Account): Future[Int] = Future.successful(accountId)
@@ -64,6 +83,8 @@ class CommandRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
       override def sortingFields: Set[String] = ???
 
       override def selectAll: Future[Seq[Account]] = Future.successful(mockData)
+
+      override def update(id: Int, row: Account): Future[Int] = Future.successful(accountId)
     }
   }
 }

@@ -71,6 +71,15 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
     repo.selectAll
   }
 
+  override def update(id: Int, account: Account): F[Int] = {
+    for {
+      validatedByFields <- validateAccount(account)
+      validatedByName <- validateAccountDoesNotExist(validatedByFields)
+      id <- repo.update(id, validatedByName)
+    } yield id
+    repo.update(id, account)
+  }
+
   private def doesAccountNameAlreadyExist(account: Account, accounts: Seq[Account]): F[Account] = {
     val name = account.name
     val names = getAccountNames(accounts)

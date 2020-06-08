@@ -7,6 +7,7 @@ import akka.http.scaladsl.server.Directives.{as, entity, pathEndOrSingleSlash, p
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
+import doobie.util.log
 import org.mint.Exceptions.InvalidAccount
 import org.mint.json.GenericJsonWriter
 import org.mint.models.{Account, CommandResult}
@@ -39,7 +40,21 @@ class CommandRoutes(service: AccountService[Future])(
               }
             }
           }
-        }
+        },
+          path(IntNumber) { id =>
+            log.info("*******************************")
+            log.info("Update account with id: '{}'", id)
+            concat(put {
+              log.info("Update account via put")
+              entity(as[Account]) { account =>
+                log.info("Update account: '{}'", account)
+                val updated = service.update(id, account)
+                complete {
+                  toCommandResponse(updated, CommandResult)
+                }
+              }
+            })
+          }
       )
     }
     corsHandler(route)
@@ -57,7 +72,8 @@ class CommandRoutes(service: AccountService[Future])(
       case Failure(e) =>
         val (status, msg) = e match {
           case InvalidAccount(account, m) => (StatusCodes.PreconditionFailed, s"Invalid account: $account. Reason: $m")
-          case throwable => (StatusCodes.InternalServerError, s"Something bad happened: $throwable")
+          case throwable =>
+            (StatusCodes.InternalServerError, s"Something bad happened: $throwable")
         }
         Future.successful(HttpResponse(status, entity = msg))
     }

@@ -7,4 +7,5 @@ trait AccountAlg[F[_]] {
   def selectAll: F[Seq[Account]]
   def insert(account: Account): F[Int]
   def existingTypeofAccounts: F[AccountTypes]
+  def update(id: Int, account: Account): F[Int]
 }

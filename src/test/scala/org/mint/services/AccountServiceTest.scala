@@ -34,7 +34,7 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
       when(mockRepository.insert(brussels)) thenReturn(Future(expectedId))
       whenReady(service.insert(brussels)) {
         result =>
-          result should equal(expectedId)
+          result shouldEqual expectedId
       }
     }
     "raise an error when account name is null" in {
@@ -128,6 +128,18 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
           typeofAccounts.length shouldEqual 2
           typeofAccounts should contain("test")
           typeofAccounts should contain("current")
+      }
+    }
+  }
+
+  "update" should {
+    "update existing account with valid name and return it's id" in {
+      val expectedId = 1
+      when(mockRepository.selectAll) thenReturn(Future(Seq(berlin)))
+      when(mockRepository.update(berlin.id, berlinWithPrefixedName)) thenReturn Future(1)
+      whenReady(service.update(berlin.id, berlinWithPrefixedName)) {
+        result =>
+          result shouldEqual expectedId
       }
     }
   }

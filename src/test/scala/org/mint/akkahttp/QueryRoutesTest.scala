@@ -93,6 +93,8 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
       override def sortingFields: Set[String] = Set("id", "name")
 
       override def selectAll: Future[Seq[Account]] = Future.successful (mockData)
+
+      override def update(id: Int, row: Account): Future[Int] = ???
     }
   }
 }

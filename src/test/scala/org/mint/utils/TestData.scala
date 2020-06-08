@@ -18,6 +18,7 @@ object TestData {
   val berlinWithEmptyCompany = Account(1, "berlin", "current", "", true, true, "mapping file")
   val berlinWithUppercaseName: Account =
     Account(1, "BERLIN", "test", "Deutsche Bank", true, true, "mapping file")
+  val berlinWithPrefixedName:Account = Account(2, "prefixberlin", "current", "Deutsche Bank", true, true, "mapping file")
 
   val madridWithUppercaseName: Account = Account(4, "MADRID", "test", "Banco Mare Nostrun", true, false, "mapping file")
   val mockData: IndexedSeq[Account] =

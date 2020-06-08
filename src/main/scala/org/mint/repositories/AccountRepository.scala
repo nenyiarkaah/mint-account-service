@@ -34,6 +34,10 @@ class AccountRepository(db: Database) extends Repository[Future] {
 
   override def sortingFields: Set[String] = sorting.keys.toSet
 
+  override def update(id: Int, row: Account): Future[Int] = db.run(accounts.filter(_.id === id)
+    .map(r => (r.name, r.accountType, r.company, r.isMyAccount, r.isActive, r.mappingFile))
+    .update((row.name, row.accountType, row.company, row.isMyAccount, row.isActive, row.mappingFile)))
+
   def dropSchema(): FixedSqlAction[Unit, NoStream, Effect.Schema] = accounts.schema.drop
 
   class Accounts(tag: Tag) extends Table[Account](tag, "account") {
