@@ -42,10 +42,7 @@ class CommandRoutes(service: AccountService[Future])(
           }
         },
           path(IntNumber) { id =>
-            log.info("*******************************")
-            log.info("Update account with id: '{}'", id)
             concat(put {
-              log.info("Update account via put")
               entity(as[Account]) { account =>
                 log.info("Update account: '{}'", account)
                 val updated = service.update(id, account)
