@@ -119,6 +119,27 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
     }
   }
 
+  "select account by id" should {
+    "return an account when the id is valid" in {
+      val id = 122
+      when(mockRepository.select(id)) thenReturn(Future(Some(madrid)))
+      whenReady(service.select(id)) {
+        result =>
+          result shouldBe defined
+          result.get shouldEqual madrid
+      }
+    }
+    "return an empty option when the id is invalid" in {
+      val id = 1
+      when(mockRepository.select(id)) thenReturn(Future(None))
+      whenReady(service.select(id)) {
+        result =>
+          result shouldBe empty
+      }
+    }
+
+  }
+
   "existingTypeofAccounts" should {
     "return a distinct list of 2 account types" in {
       when(mockRepository.selectAll) thenReturn(Future(mockData))

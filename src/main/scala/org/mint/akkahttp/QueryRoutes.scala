@@ -37,7 +37,16 @@ class QueryRoutes (service: AccountService[Future])(
             }
           }
         },
-        path("existingtypeofaccounts"){
+        path(IntNumber) { id =>
+          concat(get {
+            val maybeAccount = service.select(id)
+            log.debug("Found account: {}", maybeAccount)
+            rejectEmptyResponse {
+              complete(maybeAccount)
+            }
+          })
+        },
+        path("existingtypeofaccounts") {
           concat(pathEndOrSingleSlash {
             log.debug("Existing type of accounts")
             val typeOfAccounts = service.existingTypeofAccounts

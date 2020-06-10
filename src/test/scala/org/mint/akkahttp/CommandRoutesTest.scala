@@ -84,6 +84,8 @@ class CommandRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
 
       override def selectAll: Future[Seq[Account]] = Future.successful(mockData)
 
+      def select(id: Int): Future[Option[Account]] = ???
+
       override def update(id: Int, row: Account): Future[Int] = Future.successful(accountId)
     }
   }

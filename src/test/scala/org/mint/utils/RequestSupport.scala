@@ -17,6 +17,9 @@ object RequestSupport {
   def selectAllRequest(sort: String): HttpRequest =
     HttpRequest(uri = s"$prefix?sort=$sort")
 
+  def selectByRequest(id: Int): HttpRequest =
+    HttpRequest(uri = s"$prefix/$id")
+
   def existingTypeofAccountsRequest: HttpRequest =
     HttpRequest(uri = s"$prefix/existingtypeofaccounts")
 

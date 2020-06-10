@@ -1,11 +1,12 @@
 package org.mint.akkahttp
 
 import akka.http.scaladsl.model.{ContentTypes, StatusCodes}
+import akka.http.scaladsl.server.{Route}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import cats.instances.future.catsStdInstancesForFuture
 import com.softwaremill.macwire.wire
 import org.mint.json.SprayJsonFormat._
-import org.mint.models.{Account, Accounts}
+import org.mint.models.{Account, AccountTypes, Accounts}
 import org.mint.repositories.Repository
 import org.mint.services.AccountService
 import org.mint.utils.RequestSupport._
@@ -56,11 +57,31 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
       val expectedAccounts = Seq(geneva, madrid, paris)
 
       request ~> routes ~> check {
-        status shouldEqual StatusCodes.OK
-        contentType shouldEqual ContentTypes.`application/json`
-        val results = entityAs[Accounts].accounts
-        results.length shouldEqual 3
-        results shouldEqual expectedAccounts
+        commonChecks
+        val response = entityAs[Accounts].accounts
+        response.length shouldEqual 3
+        response shouldEqual expectedAccounts
+      }
+    }
+  }
+
+
+  "select account by id" should {
+    "return an account when the id is valid" in {
+      val id: Int = 4
+
+      val request = selectByRequest(id)
+      request ~> routes ~> check {
+        commonChecks
+        val response = entityAs[Option[Account]]
+        response shouldEqual Some(madrid)
+      }
+    }
+    "return empty when the id is invalid" in {
+      val id = 2222
+      val select = selectByRequest(id)
+      select ~> Route.seal(routes) ~> check {
+        failedRequestCheck
       }
     }
   }
@@ -69,10 +90,27 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
     "return a type of account list of 2 for mockData" in {
       val request = existingTypeofAccountsRequest
       request ~> routes ~> check {
-        status shouldEqual StatusCodes.OK
-        contentType shouldEqual ContentTypes.`application/json`
+        commonChecks
+        val response = entityAs[AccountTypes].accountTypes
+        response.length shouldEqual 2
+        response contains "test"
+        response contains "current"
       }
     }
+  }
+
+
+  private def commonChecks = {
+    val expectedStatusCode = StatusCodes.OK
+    val contentType = ContentTypes.`application/json`
+    if (expectedStatusCode !== status) println(s"*** Response body: $responseEntity")
+    status shouldEqual expectedStatusCode
+    contentType shouldEqual contentType
+  }
+
+  private def failedRequestCheck = {
+    val expectedStatusCode = StatusCodes.NotFound
+    status shouldEqual expectedStatusCode
   }
 
   private def createStubRepo = {
@@ -91,6 +129,9 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
       override def sortingFields: Set[String] = Set("id", "name")
 
       override def selectAll: Future[Seq[Account]] = Future.successful (mockData)
+
+      def select(id: Int): Future[Option[Account]] =
+        Future.successful(mockData.filter(_.id === id).headOption)
 
       override def update(id: Int, row: Account): Future[Int] = ???
     }

@@ -69,6 +69,8 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
     repo.selectAll
   }
 
+  override def select(id: Int): F[Option[Account]] = repo.select(id)
+
   override def update(id: Int, account: Account): F[Int] = {
     for {
       validatedByFields <- validateAccount(account)

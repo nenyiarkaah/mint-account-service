@@ -1,6 +1,7 @@
 package org.mint.endtoend
 
 import akka.http.scaladsl.model.{ContentTypes, HttpRequest, StatusCodes}
+import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.dimafeng.testcontainers.{ForAllTestContainer, MSSQLServerContainer}
 import com.typesafe.config.{Config, ConfigFactory}
@@ -96,13 +97,36 @@ class E2ETest
         request ~> mod.routes ~> check {
           status shouldEqual StatusCodes.OK
           contentType shouldEqual ContentTypes.`application/json`
-          val accounts = entityAs[Accounts].accounts
-          accounts.length shouldEqual 4
-          accounts should contain(geneva)
-          accounts should contain(paris)
-          accounts should contain(berlin)
-          accounts should contain(madrid)
-          accounts shouldEqual Seq(berlin, geneva, madrid, paris)
+          val response = entityAs[Accounts].accounts
+          response.length shouldEqual 4
+          response should contain(geneva)
+          response should contain(paris)
+          response should contain(berlin)
+          response should contain(madrid)
+          response shouldEqual Seq(berlin, geneva, madrid, paris)
+        }
+      }
+    }
+
+    "select account by id" should {
+      "return an account when the id is valid" in {
+        insertData(mockDataForEndToEnd)
+
+        val id = 2
+        val select = selectByRequest(id)
+        select ~> mod.routes ~> check {
+          commonChecks
+          val response = entityAs[Option[Account]]
+          response shouldEqual Some(geneva)
+        }
+      }
+      "return empty when the id is invalid" in {
+        insertData(mockDataForEndToEnd)
+
+        val id = 2222
+        val select = selectByRequest(id)
+        select ~> Route.seal(mod.routes) ~> check {
+          failedRequestCheck
         }
       }
     }
@@ -171,5 +195,10 @@ class E2ETest
       status shouldEqual expectedStatusCode
       contentType shouldEqual contentType
     }
+  }
+
+  private def failedRequestCheck = {
+    val expectedStatusCode = StatusCodes.NotFound
+    status shouldEqual expectedStatusCode
   }
 }

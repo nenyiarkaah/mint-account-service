@@ -32,6 +32,9 @@ class AccountRepository(db: Database) extends Repository[Future] {
       db.run(accounts.result)
   }
 
+  override def select(id: Int): Future[Option[Account]] =
+    db.run(accounts.filter(_.id === id).take(1).result.headOption)
+
   override def sortingFields: Set[String] = sorting.keys.toSet
 
   override def update(id: Int, row: Account): Future[Int] = db.run(accounts.filter(_.id === id)
