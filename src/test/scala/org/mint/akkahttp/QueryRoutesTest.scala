@@ -26,13 +26,12 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
       val request = selectAllRequest
 
       request ~> routes ~> check {
-        status shouldEqual StatusCodes.OK
-        contentType shouldEqual ContentTypes.`application/json`
-        val results = entityAs[Accounts].accounts
-          results.length shouldEqual 3
-        results should contain(geneva)
-          results should contain(paris)
-          results should contain(madrid)
+        commonChecks
+        val response = entityAs[Accounts].accounts
+          response.length shouldEqual 3
+          response should contain(geneva)
+          response should contain(paris)
+          response should contain(madrid)
       }
     }
     "return a list of accounts sorted by id" in {
@@ -43,11 +42,10 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
       val expectedAccounts = Seq(geneva, paris, madrid)
 
       request ~> routes ~> check {
-        status shouldEqual StatusCodes.OK
-        contentType shouldEqual ContentTypes.`application/json`
-        val results = entityAs[Accounts].accounts
-        results.length shouldEqual 3
-        results shouldEqual expectedAccounts
+        commonChecks
+        val response = entityAs[Accounts].accounts
+        response.length shouldEqual 3
+        response shouldEqual expectedAccounts
       }
     }
     "return a list of accounts sorted by account name" in {

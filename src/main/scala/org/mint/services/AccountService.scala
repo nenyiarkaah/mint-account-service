@@ -13,8 +13,6 @@ import com.typesafe.scalalogging.StrictLogging
 import scala.language.higherKinds
 
 class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwable]) extends AccountAlg[F] with StrictLogging {
-
-
   val system: ActorSystem = ActorSystem("accounts-service")
 
   private val validateAccount: Account => F[Account] = {

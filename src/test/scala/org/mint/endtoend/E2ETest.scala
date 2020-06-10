@@ -78,12 +78,12 @@ class E2ETest
         request ~> mod.routes ~> check {
           status shouldEqual StatusCodes.OK
           contentType shouldEqual ContentTypes.`application/json`
-          val accounts = entityAs[Accounts].accounts
-          accounts.length shouldEqual 3
-          accounts should contain(geneva)
-          accounts should contain(paris)
-          accounts should contain(berlin)
-          accounts shouldEqual Seq(berlin, geneva, paris)
+          val response = entityAs[Accounts].accounts
+          response.length shouldEqual 3
+          response should contain(geneva)
+          response should contain(paris)
+          response should contain(berlin)
+          response shouldEqual Seq(berlin, geneva, paris)
         }
       }
       "return a list of accounts sorted by name" in {
@@ -131,14 +131,15 @@ class E2ETest
       request ~> mod.routes ~> check {
         status shouldEqual StatusCodes.OK
         contentType shouldEqual ContentTypes.`application/json`
-        val typeOfAccounts = entityAs[AccountTypes].accountTypes
-        typeOfAccounts.length shouldEqual 2
+        val response = entityAs[AccountTypes].accountTypes
+        response.length shouldEqual 2
+        response contains "test"
+        response contains "current"
       }
     }
   }
 
-  private def insertData(accounts: IndexedSeq[Account]): Unit =
-    accounts.foreach { t =>
+  private def insertData(accounts: IndexedSeq[Account]): Unit = accounts.foreach { t =>
       var id = 1
       val insert = insertRequest(t)
       insertAndCheckSuccessfulRequest(insert, t.id)
