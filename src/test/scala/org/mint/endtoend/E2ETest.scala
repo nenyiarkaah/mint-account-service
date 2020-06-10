@@ -135,7 +135,7 @@ class E2ETest
       "update account by id" in {
         insertData(mockDataForEndToEnd)
         val id = berlin.id
-        val prefixedName = "updated " + berlin.name
+        val prefixedName = berlinWithPrefixedName.name
         val update = updateRequest(berlinWithPrefixedName, id)
 
         update ~> mod.routes ~> check {
@@ -143,9 +143,15 @@ class E2ETest
           val result = entityAs[CommandResult].id
           result shouldEqual id
         }
+
+        val select = selectByRequest(id)
+        select ~> mod.routes ~> check {
+          commonChecks
+          val response = entityAs[Option[Account]].head
+          response.name shouldEqual prefixedName
+        }
       }
     }
-  }
 
   "existingTypeofAccounts" should {
     "return a distinct list of 2 account types" in {

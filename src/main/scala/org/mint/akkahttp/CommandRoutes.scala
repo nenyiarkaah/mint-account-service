@@ -7,7 +7,6 @@ import akka.http.scaladsl.server.Directives.{as, entity, pathEndOrSingleSlash, p
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
-import doobie.util.log
 import org.mint.Exceptions.InvalidAccount
 import org.mint.json.GenericJsonWriter
 import org.mint.models.{Account, CommandResult}
