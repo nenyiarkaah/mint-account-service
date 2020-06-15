@@ -12,6 +12,26 @@ The patterns and practice was taken from [CRUD Microservice with AkkaHttp](https
 - SBT
 - Docker Desktop [Mac](https://docs.docker.com/docker-for-mac/install/), [Windows](https://docs.docker.com/docker-for-windows/install/) and [Linux](https://docs.docker.com/engine/install/)
 
+### Running Tests
+Tests are located in ```mint-account -> src -> test -> scala -> org.mint```
+There are 4 kinds of tests
+- Code Style Tests
+These are used to make sure when writing that code styles are adhered to. 
+- Unit Tests (Service Tests)
+These use Mockito to mock the repository layer  and work by using ```when(repository method is called) return(value)```.
+- Integration Tests (CommandRoute & QueryRoute Tests)
+These tests use macwire for autowiring the service and repository layer.  
+- End to End Tests
+These test start up the application plus any dependencies stated in this case SQL Server instance (this requires Docker Desktop)
+Each endpoint will be checked for an expected response based on a number of scenarios.
+
+To run the tests you can either use the IDE or SBT
+The IDE should have a right click option to run tests
+SBT commands: 
+- `sbt test:scalastyle` (runs Code Style)
+- `sbt test` (runs Code Style, Unit & Integration Tests)
+- ######TODO `sbt test:endtoend` (run End to end Tests)
+
 ### Run with Docker Compose
 
 #### Requirements
