@@ -6,6 +6,12 @@ The patterns and practice was taken from [CRUD Microservice with AkkaHttp](https
 ##### Functionality
 - The ability to create an account given the account name doesn't already exist.
 
+#### Prerequisites
+- IDE - in this case I am using JetBrains IntelliJ IDEA
+- Java JDK version - 1.8
+- SBT
+- Docker Desktop [Mac](https://docs.docker.com/docker-for-mac/install/), [Windows](https://docs.docker.com/docker-for-windows/install/) and [Linux](https://docs.docker.com/engine/install/)
+
 ### Run with Docker Compose
 
 #### Requirements
