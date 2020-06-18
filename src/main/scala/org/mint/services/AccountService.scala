@@ -80,6 +80,8 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
     repo.update(id, account)
   }
 
+  override def delete(id: Int): F[Int] = repo.delete(id)
+
   private def doesAccountNameAlreadyExist(account: Account, accounts: Seq[Account]): F[Account] = {
     val name = account.name
     val names = getAccountNames(accounts)
@@ -105,7 +107,6 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
       doesAccountNameAlreadyExist <- doesAccountNameAlreadyExist(a, existingAccounts)
     } yield doesAccountNameAlreadyExist
   }
-
 }
 
 object AccountService {

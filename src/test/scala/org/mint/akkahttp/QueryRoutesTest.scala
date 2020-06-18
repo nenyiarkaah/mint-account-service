@@ -134,6 +134,8 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
         Future.successful(mockData.filter(_.id === id).headOption)
 
       override def update(id: Int, row: Account): Future[Int] = ???
+
+      override def delete(id: Int): Future[Int] = ???
     }
   }
 }

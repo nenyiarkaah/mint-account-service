@@ -152,6 +152,38 @@ class E2ETest
       }
     }
 
+    "delete" should {
+      "delete an account based on id returns it's id" in {
+        insertData(mockDataForEndToEnd)
+        val id = berlin.id
+        val delete = deleteRequest(id)
+
+        delete ~> mod.routes ~> check {
+          commonChecks
+          val response = entityAs[CommandResult]
+          response.id shouldEqual id
+        }
+
+        val select = selectByRequest(id)
+        select ~> Route.seal(mod.routes) ~> check {
+          failedRequestCheck
+        }
+      }
+      "delete an invalid account based on id returns zero" in {
+        insertData(mockDataForEndToEnd)
+        val id = 133
+        val expectedId = 0
+        val delete = deleteRequest(id)
+
+        delete ~> mod.routes ~> check {
+          commonChecks
+          val response = entityAs[CommandResult]
+          response.id shouldEqual expectedId
+        }
+      }
+    }
+  }
+
   "existingTypeofAccounts" should {
     "return a distinct list of 2 account types" in {
       val request = existingTypeofAccountsRequest

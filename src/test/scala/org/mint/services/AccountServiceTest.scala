@@ -146,7 +146,8 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
       whenReady(service.existingTypeofAccounts) {
         result =>
           val typeofAccounts = result.accountTypes
-          typeofAccounts.length shouldEqual 2
+          val expectedLength = 2
+          typeofAccounts.length shouldEqual expectedLength
           typeofAccounts should contain("test")
           typeofAccounts should contain("current")
       }
@@ -155,10 +156,30 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
 
   "update" should {
     "update existing account with valid name and return it's id" in {
-      val expectedId = 1
+      val givenAndExpectedId = 1
       when(mockRepository.selectAll) thenReturn(Future(Seq(berlin)))
-      when(mockRepository.update(berlin.id, berlinWithPrefixedName)) thenReturn Future(1)
+      when(mockRepository.update(berlin.id, berlinWithPrefixedName)) thenReturn Future(givenAndExpectedId)
       whenReady(service.update(berlin.id, berlinWithPrefixedName)) {
+        result =>
+          result shouldEqual givenAndExpectedId
+      }
+    }
+  }
+
+  "delete" should {
+    "delete a valid account and return it's id" in {
+      val givenAndExpectedId = 1
+      when(mockRepository.delete(givenAndExpectedId)) thenReturn(Future(givenAndExpectedId))
+      whenReady(service.delete(givenAndExpectedId)) {
+        result =>
+          result shouldEqual givenAndExpectedId
+      }
+    }
+    "delete a invalid account returns an error" in {
+      val givenId = 1
+      val expectedId = 0
+      when(mockRepository.delete(givenId)) thenReturn(Future(expectedId))
+      whenReady(service.delete(givenId)) {
         result =>
           result shouldEqual expectedId
       }

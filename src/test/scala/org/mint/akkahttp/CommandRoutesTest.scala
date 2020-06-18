@@ -52,7 +52,6 @@ class CommandRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
     }
   }
 
-
   "update" should {
     "update existing account with valid name and return it's id" in {
       val request = updateRequest(berlin, berlin.id)
@@ -65,6 +64,18 @@ class CommandRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
       }
     }
 
+    "delete" should {
+      "delete an account based on id" in {
+        val id = berlin.id
+        val request = deleteRequest(id)
+
+        request ~> routes ~> check {
+          commonChecks
+          val response = entityAs[CommandResult]
+          response.id shouldEqual id
+        }
+      }
+    }
   }
 
   private def commonChecks = {
@@ -84,9 +95,11 @@ class CommandRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
 
       override def selectAll: Future[Seq[Account]] = Future.successful(mockData)
 
-      def select(id: Int): Future[Option[Account]] = ???
+      override def select(id: Int): Future[Option[Account]] = ???
 
       override def update(id: Int, row: Account): Future[Int] = Future.successful(accountId)
+
+      override def delete(id: Int): Future[Int] = Future.successful(accountId)
     }
   }
 }

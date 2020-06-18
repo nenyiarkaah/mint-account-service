@@ -41,6 +41,8 @@ class AccountRepository(db: Database) extends Repository[Future] {
     .map(r => (r.name, r.accountType, r.company, r.isMyAccount, r.isActive, r.mappingFile))
     .update((row.name, row.accountType, row.company, row.isMyAccount, row.isActive, row.mappingFile)))
 
+  override def delete(id: Int): Future[Int] = db.run(accounts.filter(_.id === id).delete)
+
   def dropSchema(): FixedSqlAction[Unit, NoStream, Effect.Schema] = accounts.schema.drop
 
   class Accounts(tag: Tag) extends Table[Account](tag, "account") {

@@ -40,17 +40,26 @@ class CommandRoutes(service: AccountService[Future])(
             }
           }
         },
-          path(IntNumber) { id =>
-            concat(put {
-              entity(as[Account]) { account =>
-                log.info("Update account: '{}'", account)
-                val updated = service.update(id, account)
-                complete {
-                  toCommandResponse(updated, CommandResult)
-                }
+        path(IntNumber) { id =>
+          concat(put {
+            entity(as[Account]) { account =>
+              log.info("Update account: '{}'", account)
+              val updated = service.update(id, account)
+              complete {
+                toCommandResponse(updated, CommandResult)
               }
-            })
-          }
+            }
+          })
+        },
+        path(IntNumber) { id =>
+          concat(delete {
+            log.debug("Delete account: '{}'", id)
+            val deleted = service.delete(id)
+            complete {
+              toCommandResponse(deleted, CommandResult)
+            }
+          })
+        }
       )
     }
     corsHandler(route)

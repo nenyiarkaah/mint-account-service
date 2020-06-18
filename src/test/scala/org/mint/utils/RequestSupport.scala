@@ -20,6 +20,9 @@ object RequestSupport {
   def selectByRequest(id: Int): HttpRequest =
     HttpRequest(uri = s"$prefix/$id")
 
+  def deleteRequest(id: Int): HttpRequest =
+    HttpRequest(uri = s"$prefix/$id", method = HttpMethods.DELETE)
+
   def existingTypeofAccountsRequest: HttpRequest =
     HttpRequest(uri = s"$prefix/existingtypeofaccounts")
 
