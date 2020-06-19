@@ -9,8 +9,8 @@ import org.mint.json.SprayJsonFormat._
 import org.mint.models.{Account, AccountTypes, Accounts, CommandResult}
 import org.mint.modules.AkkaModule
 import org.mint.utils.RequestSupport._
-import org.mint.utils.TestData._
-import org.scalatest.{BeforeAndAfter, DoNotDiscover, Matchers, WordSpec}
+import org.mint.endtoend.utils.TestData._
+import org.scalatest.{BeforeAndAfter, Matchers, WordSpec}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.Await
