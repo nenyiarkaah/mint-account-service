@@ -35,7 +35,8 @@ The IDE should have a right click option to run tests
 SBT commands: 
 - `sbt test:scalastyle` (runs Code Style)
 - `sbt test` (runs Code Style, Unit & Integration Tests)
-- `sbt e2e:test` (run End to end Tests)
+- `sbt e2e:test` ~~(run End to end Tests)~~
+  - Currently testcontainer is failing.
 
 ### Run with Docker Compose
 
