@@ -1,4 +1,4 @@
-ame: Mint Account Service CI
+name: Mint Account Service CI
 on: [push]
 jobs:
   Mint-Account-Service-CI:
