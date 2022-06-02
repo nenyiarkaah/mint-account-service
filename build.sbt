@@ -44,7 +44,7 @@ lazy val root = (project in file("."))
       "org.scalatest" %% "scalatest" % "3.0.5" % Test,
       "com.dimafeng" %% "testcontainers-scala" % "0.36.0" % Test,
       "com.dimafeng" %% "testcontainers-scala-mssqlserver" % "0.36.0" % Test,
-      "org.testcontainers" % "mssqlserver" % "1.9.1" % Test,
+      "org.testcontainers" % "mssqlserver" % "1.17.2" % Test,
       "com.storm-enroute" %% "scalameter-core" % "0.10.1" % Test,
       "com.microsoft.sqlserver" % "mssql-jdbc" % "8.2.2.jre8",
       "org.mockito" % "mockito-core" % "3.3.3"
