@@ -8,7 +8,7 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.MethodDirectives.get
 import akka.http.scaladsl.server.directives.PathDirectives.path
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
-import org.mint.models.{Account, AccountTypes, Accounts}
+import org.mint.models.{Account, AccountTypes, Accounts, ImportStatus}
 import org.mint.services.AccountService
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -18,7 +18,8 @@ class QueryRoutes (service: AccountService[Future])(
   system: ActorSystem,
   ts: ToResponseMarshaller[Accounts],
   actt: ToResponseMarshaller[AccountTypes],
-  a: ToResponseMarshaller[Account]
+  a: ToResponseMarshaller[Account],
+  is: ToResponseMarshaller[ImportStatus]
 ) extends CORSHandler {
 
   def prefix(r: Route): Route = pathPrefix("api" / "accounts")(r)
@@ -52,6 +53,16 @@ class QueryRoutes (service: AccountService[Future])(
             val typeOfAccounts = service.existingTypeofAccounts
             complete(typeOfAccounts)
           })
+        },
+        path("isconfiguredforimports") {
+          get {
+            parameter("id") { sId =>
+              val id = sId.toInt
+              val isConfigured = service.IsConfiguredForImports(id)
+              log.debug("Account {0} is configured for import: {1}", id, isConfigured)
+              complete(isConfigured)
+            }
+          }
         }
       )
     }

@@ -17,4 +17,8 @@ jobs:
           distribution: temurin
           java-version: 8
       - name: Build and Code Style Test
-        run: sbt -v +test:scalastyle
+        run: sbt +test:scalastyle
+      - name: Unit Test
+        run: sbt +ut:test
+      - name: E2E Test
+        run: sbt +e2e:test

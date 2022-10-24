@@ -1,12 +1,12 @@
 package org.mint.akkahttp
 
 import akka.http.scaladsl.model.{ContentTypes, StatusCodes}
-import akka.http.scaladsl.server.{Route}
+import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import cats.instances.future.catsStdInstancesForFuture
 import com.softwaremill.macwire.wire
 import org.mint.json.SprayJsonFormat._
-import org.mint.models.{Account, AccountTypes, Accounts}
+import org.mint.models.{Account, AccountTypes, Accounts, ImportStatus}
 import org.mint.repositories.Repository
 import org.mint.services.AccountService
 import org.mint.utils.RequestSupport._
@@ -18,6 +18,7 @@ import scala.concurrent.Future
 class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
   val service = wire[AccountService[Future]]
   val routes = wire[QueryRoutes].routes
+
 
   "selectAll" should {
     "return a list of accounts" in {
@@ -98,7 +99,44 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
       }
     }
   }
+  "isConfiguredForImports" should {
+    "return 200 and true when account is configured for import" in {
 
+      val accountId = 2
+      val expectedIsConfigured = ImportStatus(Some(true))
+      val request = isConfiguredForImportsRequest(accountId)
+      request ~> routes ~> check {
+        status shouldEqual StatusCodes.OK
+        contentType shouldEqual ContentTypes.`application/json`
+        val response = entityAs[ImportStatus]
+        response shouldBe expectedIsConfigured
+      }
+    }
+    "return 200 and false when account is not configured for import" in {
+      val accountId = 5
+      val expectedIsConfigured = ImportStatus(Some(false))
+      val request = isConfiguredForImportsRequest(accountId)
+
+      request ~> routes ~> check {
+        status shouldEqual StatusCodes.OK
+        contentType shouldEqual ContentTypes.`application/json`
+        val response = entityAs[ImportStatus]
+        response shouldBe expectedIsConfigured
+      }
+    }
+    "return 200 and false when account does not exist" in {
+      val accountId = 500
+      val expectedIsConfigured = ImportStatus(Some(false))
+      val request = isConfiguredForImportsRequest(accountId)
+
+      request ~> routes ~> check {
+        status shouldEqual StatusCodes.OK
+        contentType shouldEqual ContentTypes.`application/json`
+        val response = entityAs[ImportStatus]
+        response shouldBe expectedIsConfigured
+      }
+    }
+  }
 
   private def commonChecks = {
     val expectedStatusCode = StatusCodes.OK
@@ -131,7 +169,7 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
       override def selectAll: Future[Seq[Account]] = Future.successful (mockData)
 
       def select(id: Int): Future[Option[Account]] =
-        Future.successful(mockData.filter(_.id === id).headOption)
+        Future.successful(mockDataSecondary.filter(_.id === id).headOption)
 
       override def update(id: Int, row: Account): Future[Int] = ???
 

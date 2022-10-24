@@ -3,6 +3,7 @@ package org.mint.services
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import cats.instances.future.catsStdInstancesForFuture
 import org.mint.Exceptions.InvalidAccount
+import org.mint.models.ImportStatus
 import org.mint.repositories.AccountRepository
 import org.mint.utils.TestData._
 import org.mockito.ArgumentMatchers._
@@ -182,6 +183,54 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
       whenReady(service.delete(givenId)) {
         result =>
           result shouldEqual expectedId
+      }
+    }
+  }
+
+  "isConfiguredForImports" should {
+    "return true when account is configured for import" in {
+      val accountId = 1
+      val expectedIsConfigured = ImportStatus(Some(true))
+      when(mockRepository.select(accountId)) thenReturn (Future(Some(berlin)))
+      whenReady(service.IsConfiguredForImports(accountId)) {
+        result =>
+          result shouldBe expectedIsConfigured
+      }
+    }
+    "return false if the account exists and is not configured for importing" in {
+      val accountId = 1
+      val expectedIsConfigured = ImportStatus(Some(false))
+      when(mockRepository.select(accountId)) thenReturn (Future(Some(brussels)))
+      whenReady(service.IsConfiguredForImports(accountId)) {
+        result =>
+          result shouldBe expectedIsConfigured
+      }
+    }
+    "return false if the account exists and is not my account" in {
+      val accountId = 7
+      val expectedIsConfigured = ImportStatus(Some(false))
+      when(mockRepository.select(accountId)) thenReturn (Future(Some(rome)))
+      whenReady(service.IsConfiguredForImports(accountId)) {
+        result =>
+          result shouldBe expectedIsConfigured
+      }
+    }
+    "return false if the account exists and is not active" in {
+      val accountId = 8
+      val expectedIsConfigured = ImportStatus(Some(false))
+      when(mockRepository.select(accountId)) thenReturn (Future(Some(athens)))
+      whenReady(service.IsConfiguredForImports(accountId)) {
+        result =>
+          result shouldBe expectedIsConfigured
+      }
+    }
+    "return false if the account does not exist" in {
+      val accountId = 122
+      val expectedIsConfigured = ImportStatus(Some(false))
+      when(mockRepository.select(accountId)) thenReturn (Future(None))
+      whenReady(service.IsConfiguredForImports(accountId)) {
+        result =>
+          result shouldBe expectedIsConfigured
       }
     }
   }

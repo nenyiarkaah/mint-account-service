@@ -1,4 +1,5 @@
 import E2E._
+import Unit._
 
 lazy val akkaHttpVersion = "10.1.6"
 lazy val akkaVersion = "2.5.19"
@@ -9,12 +10,12 @@ lazy val circeVersion = "0.11.1"
 lazy val doobieVersion = "0.6.0"
 
 lazy val root = (project in file("."))
-  .configs(E2ETest)
+  .configs(E2ETest, UnitTest)
   .settings(
     e2eSettings,
     inThisBuild(List(organization := "org.mint", scalaVersion := "2.12.8")),
     name := "mint-account-service",
-    version := "0.1.0",
+    version := "1.0.0",
     scalacOptions ++= Seq("-Ypartial-unification"),
     libraryDependencies ++= Seq(
       "org.tpolecat" %% "doobie-core"      % doobieVersion,

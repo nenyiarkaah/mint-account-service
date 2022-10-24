@@ -4,11 +4,11 @@ import akka.actor.ActorSystem
 import cats.MonadError
 import cats.syntax.flatMap._
 import cats.syntax.functor._
+import com.typesafe.scalalogging.StrictLogging
 import org.mint.Exceptions.{InvalidAccount, UnknownSortField}
-import org.mint.models.{Account, AccountTypes, Accounts}
+import org.mint.models.{Account, AccountTypes, Accounts, ImportStatus}
 import org.mint.repositories.Repository
 import org.mint.services.AccountService._
-import com.typesafe.scalalogging.StrictLogging
 
 import scala.language.higherKinds
 
@@ -45,11 +45,6 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
     } yield existingTypeofAccounts(existingAccounts)
   }
 
-  private def existingTypeofAccounts(existingAccounts: Seq[Account]) = {
-    val accountTypes = existingAccounts.map(_.accountType).distinct
-    AccountTypes(accountTypes)
-  }
-
   override def selectAll(page: Option[Int], pageSize: Option[Int], sort: Option[String]): F[Accounts] = {
     val sortBy = sort
       .map(s => repo.sortingFields.find(_ == s).toRight(UnknownSortField(s)))
@@ -81,6 +76,32 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
   }
 
   override def delete(id: Int): F[Int] = repo.delete(id)
+
+  def IsConfiguredForImports(id: Int): F[ImportStatus] = {
+    for {
+      act <- repo.select(id)
+    } yield act match {
+      case None => ImportStatus(Some(false))
+      case Some(a) => IsConfiguredForImports(a)
+      case _ => ImportStatus(Some(false))
+    }
+  }
+
+  private def IsConfiguredForImports(account: Account): ImportStatus = {
+    val isMyAccount = account.isMyAccount
+    val isActive = account.isActive
+    val containsMapping = isNotEmpty(account.mappingFile)
+    val statusOpt = Some(isMyAccount && isActive && containsMapping)
+    ImportStatus(statusOpt)
+  }
+
+  private def isNotEmpty(x: String) = !(x == null || x.trim.isEmpty)
+
+
+  private def existingTypeofAccounts(existingAccounts: Seq[Account]) = {
+    val accountTypes = existingAccounts.map(_.accountType).distinct
+    AccountTypes(accountTypes)
+  }
 
   private def doesAccountNameAlreadyExist(account: Account, accounts: Seq[Account]): F[Account] = {
     val name = account.name

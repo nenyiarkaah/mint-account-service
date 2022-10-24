@@ -7,6 +7,7 @@ object TestData {
   val geneva: Account = Account(2, "geneva", "current", "Credit Suisse", true, true, "mapping file")
   val paris: Account = Account(3, "paris", "test", "Banque National Paris", true, false, "mapping file")
   val madrid: Account = Account(4, "madrid", "test", "Banco Mare Nostrun", true, false, "mapping file")
+  val copenhagen: Account = Account(5, "copenhagen", "test", "Danmarks Nationalbank", true, true, "")
 
   val berlinWithEmptyName = Account(1, "", "current", "Deutsche Bank", true, true, "mapping file")
   val berlinWithNullAccountType = Account(1, "berlin", nullValue, "Deutsche Bank", true, true, "mapping file")
@@ -26,6 +27,14 @@ object TestData {
       geneva,
       paris,
       madrid
+    )
+  val mockDataForEndToEndTertiary: IndexedSeq[Account] =
+    IndexedSeq(
+      berlin,
+      geneva,
+      paris,
+      madrid,
+      copenhagen
     )
   private val nullValue: Null = null
 }

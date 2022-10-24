@@ -26,6 +26,9 @@ object RequestSupport {
   def existingTypeofAccountsRequest: HttpRequest =
     HttpRequest(uri = s"$prefix/existingtypeofaccounts")
 
+  def isConfiguredForImportsRequest(id: Int): HttpRequest =
+    HttpRequest(uri = s"$prefix/isconfiguredforimports?id=$id", method = HttpMethods.GET)
+
   def updateRequest[T](e: T, id: Int)(implicit w: GenericJsonWriter[T]): HttpRequest = {
     val entity = HttpEntity(MediaTypes.`application/json`, w.toJsonString(e))
     HttpRequest(uri = s"$prefix/$id", method = HttpMethods.PUT, entity = entity)
