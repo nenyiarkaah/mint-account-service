@@ -51,7 +51,7 @@ lazy val root = (project in file("."))
       "org.mockito" % "mockito-core" % "3.3.3"
     ),
     dockerBaseImage := "openjdk:8-jre-alpine",
-    Docker / packageName := "nenyi/mint-account",
+    Docker / packageName := "mint-account",
     Test / fork := true,
     addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6")
   )
