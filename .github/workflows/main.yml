@@ -5,6 +5,7 @@ env:
   REGISTRY: ghcr.io/${{ github.actor }}
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
+  dockerRepository: ghcr.io/${{ github.actor }}
 jobs:
   Mint-Account-Service-CI:
     runs-on: ubuntu-latest
@@ -56,12 +57,4 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
       - name: Build Docker image
         if: github.event_name != 'pull_request'
-        run: sbt docker:publishLocal
-      - name: Push Docker image
-        uses: redhat-actions/push-to-registry@v2
-        with:
-          image: ${{ steps.build-image.outputs.image }}
-          tags: ${{ steps.build-image.outputs.tags }}
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+        run: sbt docker:publish
