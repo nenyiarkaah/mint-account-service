@@ -52,6 +52,7 @@ lazy val root = (project in file("."))
     ),
     dockerBaseImage := "openjdk:8-jre-alpine",
     Docker / packageName := "mint-account",
+    dockerRepository := sys.env.get("REGISTRY"),
     Test / fork := true,
     addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6")
   )
