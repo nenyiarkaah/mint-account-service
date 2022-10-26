@@ -5,7 +5,6 @@ env:
   REGISTRY: ghcr.io/${{ github.actor }}
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
-  dockerRepository: ghcr.io/${{ github.actor }}
 jobs:
   Mint-Account-Service-CI:
     runs-on: ubuntu-latest
@@ -55,6 +54,9 @@ jobs:
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-      - name: Build Docker image
+      - name: Build and Publish Docker image
         if: github.event_name != 'pull_request'
         run: sbt docker:publish
+      - name: Docker clean
+        if: github.event_name != 'pull_request'
+        run: sbt docker:clean
