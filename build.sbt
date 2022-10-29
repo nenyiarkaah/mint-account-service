@@ -15,7 +15,7 @@ lazy val root = (project in file("."))
     e2eSettings,
     inThisBuild(List(organization := "org.mint", scalaVersion := "2.12.8")),
     name := "mint-account-service",
-    version := "1.0.0",
+    version := "1.0.1",
     scalacOptions ++= Seq("-Ypartial-unification"),
     libraryDependencies ++= Seq(
       "org.tpolecat" %% "doobie-core"      % doobieVersion,
@@ -50,7 +50,8 @@ lazy val root = (project in file("."))
       "com.microsoft.sqlserver" % "mssql-jdbc" % "8.2.2.jre8",
       "org.mockito" % "mockito-core" % "3.3.3"
     ),
-    dockerBaseImage := "openjdk:8-jre-alpine",
+//    dockerBaseImage := "openjdk:8-jre-alpine",
+    dockerBaseImage := "eclipse-temurin:8u345-b01-jre-jammy",
     Docker / packageName := "mint-account",
     dockerRepository := sys.env.get("REGISTRY"),
     Test / fork := true,
