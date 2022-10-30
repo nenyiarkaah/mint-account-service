@@ -50,10 +50,12 @@ lazy val root = (project in file("."))
       "com.microsoft.sqlserver" % "mssql-jdbc" % "8.2.2.jre8",
       "org.mockito" % "mockito-core" % "3.3.3"
     ),
-//    dockerBaseImage := "openjdk:8-jre-alpine",
-    dockerBaseImage := "eclipse-temurin:8u345-b01-jre-jammy",
+    dockerBaseImage := "openjdk:8-jre-alpine",
+//    dockerBaseImage := "eclipse-temurin:8u345-b01-jre-jammy",
     Docker / packageName := "mint-account",
     dockerRepository := sys.env.get("REGISTRY"),
+    dockerUpdateLatest := true,
+    dockerBuildOptions := Seq("--platform linux/arm/v7"),
     Test / fork := true,
     addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6")
   )
