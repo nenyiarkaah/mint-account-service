@@ -1,5 +1,6 @@
 import E2E._
 import Unit._
+import scala.sys.process.Process
 
 lazy val akkaHttpVersion = "10.1.6"
 lazy val akkaVersion = "2.5.19"
@@ -13,9 +14,10 @@ lazy val root = (project in file("."))
   .configs(E2ETest, UnitTest)
   .settings(
     e2eSettings,
+    dockerBuildxSettings,
     inThisBuild(List(organization := "org.mint", scalaVersion := "2.12.8")),
     name := "mint-account-service",
-    version := "1.0.1",
+    version := "1.0.2",
     scalacOptions ++= Seq("-Ypartial-unification"),
     libraryDependencies ++= Seq(
       "org.tpolecat" %% "doobie-core"      % doobieVersion,
@@ -50,12 +52,12 @@ lazy val root = (project in file("."))
       "com.microsoft.sqlserver" % "mssql-jdbc" % "8.2.2.jre8",
       "org.mockito" % "mockito-core" % "3.3.3"
     ),
-    dockerBaseImage := "openjdk:8-jre-alpine",
-//    dockerBaseImage := "eclipse-temurin:8u345-b01-jre-jammy",
+//    dockerBaseImage := "openjdk:8-jre-alpine",
+    dockerBaseImage := "eclipse-temurin:8u345-b01-jre-jammy",
     Docker / packageName := "mint-account",
     dockerRepository := sys.env.get("REGISTRY"),
     dockerUpdateLatest := true,
-    dockerBuildOptions := Seq("--platform linux/arm/v7"),
+    dockerBuildOptions := Seq("--force-rm", "-t", "[dockerAlias]", "--platform=linux/arm,linux/amd64"),
     Test / fork := true,
     addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6")
   )
@@ -81,3 +83,25 @@ lazy val compileScalaStyle = taskKey[Unit]("compileScalaStyle")
 compileScalaStyle := scalastyle.in(Compile).toTask("").value
 (test in Test) := ((test in Test) dependsOn compileScalaStyle).value
 (scalastyleConfig in Compile) := baseDirectory.value / "project" / "scalastyle-config.xml"
+
+lazy val ensureDockerBuildx = taskKey[Unit]("Ensure that docker buildx configuration exists")
+lazy val dockerBuildWithBuildx = taskKey[Unit]("Build docker images using buildx")
+lazy val dockerBuildxSettings = Seq(
+  ensureDockerBuildx := {
+    if (Process("docker buildx inspect multi-arch-builder").! == 1) {
+      Process("docker buildx create --use --name multi-arch-builder", baseDirectory.value).!
+    }
+  },
+  dockerBuildWithBuildx := {
+    streams.value.log("Building and pushing image with Buildx")
+    dockerAliases.value.foreach(
+      alias => Process("docker buildx build --platform=linux/arm,linux/arm64,linux/amd64 --push -t " +
+        alias + " .", baseDirectory.value / "target" / "docker"/ "stage").!
+    )
+  },
+  publish in Docker := Def.sequential(
+    publishLocal in Docker,
+    ensureDockerBuildx,
+    dockerBuildWithBuildx
+  ).value
+)
