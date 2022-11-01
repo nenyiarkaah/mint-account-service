@@ -60,6 +60,9 @@ jobs:
       - name: Create a new builder instance
         if: github.event_name != 'pull_request'
         run: docker builder create --use --name multi-arch-builder
+      - name: Stage Docker image
+        if: github.event_name != 'pull_request'
+        run: sbt docker:stage
       - name: Build and Publish Docker image
         if: github.event_name != 'pull_request'
         run: sbt docker:dockerBuildWithBuildx
