@@ -1,35 +1,21 @@
-<configuration scan="true" scanPeriod="60 seconds">
+<configuration>
 
-    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
-        <resetJUL>true</resetJUL>
-    </contextListener>
-
-    <conversionRule conversionWord="coloredLevel" converterClass="com.datawerks.spark.ColoredLevel"/>
-
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%date{yyyy-MM-dd HH:mm:ss.SSSZ, UTC} %-16level %-43thread %-24logger{24} %message%n%xException
-            </pattern>
+            <pattern>%date{HH:mm:ss} %-5level %logger{0} {%class %method} - %msg%n</pattern>
         </encoder>
     </appender>
 
-    <appender name="ASYNCSTDOUT" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="STDOUT"/>
-    </appender>
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <!-- encoders are assigned the type
-             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+    <appender name="file" class="ch.qos.logback.core.FileAppender">
+        <file>${log-file:-scala-logging.log}</file>
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} %-5level %logger - %msg%n</pattern>
+            <pattern>%date{HH:mm:ss} %-5level %logger{0} {%class %method} - %msg%n</pattern>
         </encoder>
     </appender>
 
-    <root level="INFO">
-        <appender-ref ref="STDOUT"/>
+    <root level="info">
+        <appender-ref ref="console"/>
+        <appender-ref ref="file"/>
     </root>
 
-    <logger name="org.testcontainers" level="DEBUG"/>
-    <root level="INFO">
-        <appender-ref ref="ASYNCSTDOUT"/>
-    </root>
 </configuration>

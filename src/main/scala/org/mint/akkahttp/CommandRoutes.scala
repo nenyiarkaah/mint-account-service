@@ -1,12 +1,12 @@
 package org.mint.akkahttp
 
 import akka.actor.ActorSystem
-import akka.event.Logging
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives.{as, entity, pathEndOrSingleSlash, pathPrefix, post, _}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
+import com.typesafe.scalalogging.StrictLogging
 import org.mint.Exceptions.InvalidAccount
 import org.mint.json.GenericJsonWriter
 import org.mint.models.{Account, CommandResult}
@@ -20,19 +20,18 @@ class CommandRoutes(service: AccountService[Future])(
   system: ActorSystem,
   w: GenericJsonWriter[CommandResult],
   t: FromRequestUnmarshaller[Account]
-) extends CORSHandler {
+) extends CORSHandler with StrictLogging {
 
   def prefix(r: Route): Route = pathPrefix("api" / "accounts")(r)
 
   def routes: Route = {
-    lazy val log = Logging(system, getClass)
 
     val route = prefix {
       concat(
         pathEndOrSingleSlash {
           post {
             entity(as[Account]) { account =>
-              log.debug("Create new account '{}'", account)
+              logger.info("Create new account '{}'", account)
               val inserted = service.insert(account)
               complete {
                 toCommandResponse(inserted, CommandResult)
@@ -43,7 +42,7 @@ class CommandRoutes(service: AccountService[Future])(
         path(IntNumber) { id =>
           concat(put {
             entity(as[Account]) { account =>
-              log.info("Update account: '{}'", account)
+              logger.info("Update account: '{}'", account)
               val updated = service.update(id, account)
               complete {
                 toCommandResponse(updated, CommandResult)
@@ -53,7 +52,7 @@ class CommandRoutes(service: AccountService[Future])(
         },
         path(IntNumber) { id =>
           concat(delete {
-            log.debug("Delete account: '{}'", id)
+            logger.info("Delete account: '{}'", id)
             val deleted = service.delete(id)
             complete {
               toCommandResponse(deleted, CommandResult)
