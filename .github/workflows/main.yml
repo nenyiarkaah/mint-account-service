@@ -66,6 +66,3 @@ jobs:
       - name: Build and Publish Docker image
         if: github.event_name != 'pull_request'
         run: sbt docker:dockerBuildWithBuildx
-      - name: Docker clean
-        if: github.event_name != 'pull_request'
-        run: sbt docker:clean

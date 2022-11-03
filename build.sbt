@@ -17,7 +17,7 @@ lazy val root = (project in file("."))
     dockerBuildxSettings,
     inThisBuild(List(organization := "org.mint", scalaVersion := "2.12.8")),
     name := "mint-account-service",
-    version := "1.0.2",
+    version := "1.0.3",
     scalacOptions ++= Seq("-Ypartial-unification"),
     libraryDependencies ++= Seq(
       "org.tpolecat" %% "doobie-core"      % doobieVersion,
