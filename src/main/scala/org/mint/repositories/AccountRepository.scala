@@ -1,12 +1,13 @@
 package org.mint.repositories
 
+import com.typesafe.scalalogging.StrictLogging
 import org.mint.models.Account
 import slick.jdbc.SQLServerProfile.api._
 import slick.sql.FixedSqlAction
 
 import scala.concurrent.Future
 
-class AccountRepository(db: Database) extends Repository[Future] {
+class AccountRepository(db: Database) extends Repository[Future] with StrictLogging {
 
   val accounts = TableQuery[Accounts]
   private val sorting = Map(
