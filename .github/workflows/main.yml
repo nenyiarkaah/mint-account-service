@@ -32,8 +32,15 @@ jobs:
         uses: sigstore/cosign-installer@f3c664df7af409cb4873aa5068053ba9d61a57b6 #v2.6.0
         with:
           cosign-release: 'v1.11.0'
+      - name: Compile
+        run: sbt compile
       - name: Build and Code Style Test
         run: sbt +test:scalastyle
+      - name: Rename test.env to .env
+        run: |
+          cp test.env .env
+      - name: Dotenv Action
+        uses: falti/dotenv-action@v1.0.2
       - name: Unit & Integration Tests
         run: sbt +ut:test
       - name: E2E Test

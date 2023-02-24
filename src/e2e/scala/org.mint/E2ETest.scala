@@ -5,6 +5,7 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.dimafeng.testcontainers.{ForAllTestContainer, MSSQLServerContainer}
 import com.typesafe.config.{Config, ConfigFactory}
+import org.mint.configs.AppConfig.load
 import org.mint.endtoend.utils.TestData._
 import org.mint.json.SprayJsonFormat._
 import org.mint.models._
@@ -25,7 +26,7 @@ class E2ETest
 
   val container = MSSQLServerContainer("mcr.microsoft.com/mssql/server:2017-latest")
 
-  lazy val cfg: Config = ConfigFactory.load(
+  lazy val cfg2: Config = ConfigFactory.load(
     ConfigFactory
       .parseMap(
         Map(
@@ -37,8 +38,10 @@ class E2ETest
       )
       .atKey("storage")
   )
+  val (server, storage, featureToggles, cfg) =
+    load.fold(e => sys.error(s"Failed to load configuration:\n${e.toList.mkString("\n")}"), identity)
 
-  lazy val mod = new AkkaModule(cfg)
+  lazy val mod = new AkkaModule(cfg2, featureToggles)
 
   before {
     Await.ready(mod.db.run(mod.repo.dropSchema()), 10.seconds)

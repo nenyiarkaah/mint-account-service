@@ -16,26 +16,26 @@ object AkkaMain extends App with StrictLogging {
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val ec: ExecutionContext = system.dispatcher
 
-  val (server, _, cfg) =
+  val (server, storage, featureToggles, cfg) =
     AppConfig.load.fold(e => sys.error(s"Failed to load configuration:\n${e.toList.mkString("\n")}"), identity)
   logger.info(
-    """      ___                       ___           ___                    ___           ___           ___           __
-      | /$$      /$$ /$$             /$$            /$$$$$$                                                      /$$
-      || $$$    /$$$|__/            | $$           /$$__  $$                                                    | $$
-      || $$$$  /$$$$ /$$ /$$$$$$$  /$$$$$$        | $$  \ $$  /$$$$$$$  /$$$$$$$  /$$$$$$  /$$   /$$ /$$$$$$$  /$$$$$$
-      || $$ $$/$$ $$| $$| $$__  $$|_  $$_/        | $$$$$$$$ /$$_____/ /$$_____/ /$$__  $$| $$  | $$| $$__  $$|_  $$_/
-      || $$  $$$| $$| $$| $$  \ $$  | $$          | $$__  $$| $$      | $$      | $$  \ $$| $$  | $$| $$  \ $$  | $$
-      || $$\  $ | $$| $$| $$  | $$  | $$ /$$      | $$  | $$| $$      | $$      | $$  | $$| $$  | $$| $$  | $$  | $$ /$$
-      || $$ \/  | $$| $$| $$  | $$  |  $$$$/      | $$  | $$|  $$$$$$$|  $$$$$$$|  $$$$$$/|  $$$$$$/| $$  | $$  |  $$$$/
-      ||__/     |__/|__/|__/  |__/   \___/        |__/  |__/ \_______/ \_______/ \______/  \______/ |__/  |__/   \___/
-      |
+    """
+      |$$$$$$\                                                     $$\
+      |$$  __$$\                                                    $$ |
+      |$$ /  $$ | $$$$$$$\  $$$$$$$\  $$$$$$\  $$\   $$\ $$$$$$$\ $$$$$$\
+      |$$$$$$$$ |$$  _____|$$  _____|$$  __$$\ $$ |  $$ |$$  __$$\\_$$  _|
+      |$$  __$$ |$$ /      $$ /      $$ /  $$ |$$ |  $$ |$$ |  $$ | $$ |
+      |$$ |  $$ |$$ |      $$ |      $$ |  $$ |$$ |  $$ |$$ |  $$ | $$ |$$\
+      |$$ |  $$ |\$$$$$$$\ \$$$$$$$\ \$$$$$$  |\$$$$$$  |$$ |  $$ | \$$$$  |
+      |\__|  \__| \_______| \_______| \______/  \______/ \__|  \__|  \____/
       |
       |
       |
       |""".stripMargin)
-  logger.info(s"Server config: $server")
+  logger.info(s"🧾Server config: ${server}")
+  logger.info(s"🏴‍☠️ Feature Toggles: $featureToggles")
 
-  val mod = new AkkaModule(cfg)
+  val mod = new AkkaModule(cfg, featureToggles)
   mod.init().failed.foreach(t => logger.error("Failed to initialize Accounts module", t))
 
   val serverBinding = Http().bindAndHandle(mod.routes, server.host.value, server.port.value)

@@ -6,8 +6,8 @@ object E2E {
     inConfig(E2ETest)(e2eConfig)
   lazy val e2eConfig =
     Defaults.configSettings ++ Defaults.testTasks ++ Seq(
-      fork in E2ETest := false,
-      parallelExecution in E2ETest := false,
-      scalaSource in E2ETest := baseDirectory.value / "src" / "e2e" / "scala"
+      E2ETest / fork := false,
+      E2ETest / parallelExecution := false,
+      E2ETest / scalaSource := baseDirectory.value / "src" / "e2e" / "scala"
     )
 }

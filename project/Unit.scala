@@ -1,3 +1,4 @@
+import au.com.onegeek.sbtdotenv.SbtDotenv.autoImport.{envFileName, envFromFile}
 import sbt.Keys._
 import sbt._
 
@@ -7,8 +8,10 @@ object Unit {
     inConfig(UnitTest)(unitConfig)
   lazy val unitConfig =
     Defaults.configSettings ++ Defaults.testTasks ++ Seq(
-      fork in UnitTest := false,
-      parallelExecution in UnitTest := false,
-      scalaSource in UnitTest := baseDirectory.value / "src" / "test" / "scala"
+      UnitTest / fork := false,
+      UnitTest / parallelExecution := false,
+      UnitTest / scalaSource := baseDirectory.value / "src" / "test" / "scala",
+      Test / envFileName := "test.env",
+      Test / envVars := (Test / envFromFile).value
     )
 }

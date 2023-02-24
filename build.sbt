@@ -16,8 +16,9 @@ lazy val root = (project in file("."))
     e2eSettings,
     dockerBuildxSettings,
     inThisBuild(List(organization := "org.mint", scalaVersion := "2.12.8")),
-    name := "mint-account-service",
-    version := "1.0.4",
+    name := "mint-account",
+    ThisBuild / envFileName := ".env",
+    version := "0.0.5",
     scalacOptions ++= Seq("-Ypartial-unification"),
     libraryDependencies ++= Seq(
       "org.tpolecat" %% "doobie-core"      % doobieVersion,
@@ -61,6 +62,12 @@ lazy val root = (project in file("."))
     addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6")
   )
   .enablePlugins(JavaAppPackaging, AshScriptPlugin)
+  .enablePlugins(BuildInfoPlugin).
+  settings(
+    buildInfoKeys := Seq[BuildInfoKey](name, version, buildInfoBuildNumber, scalaVersion, sbtVersion),
+    buildInfoPackage := "org.mint.info",
+    buildInfoOptions += BuildInfoOption.ToJson,
+  )
 
 scalacOptions ++= Seq(
   "-deprecation",
@@ -74,14 +81,14 @@ scalacOptions ++= Seq(
 
 // Create a test Scala style task to run with tests
 lazy val testScalaStyle = taskKey[Unit]("testScalaStyle")
-testScalaStyle := scalastyle.in(Test).toTask("").value
-(test in Test) := ((test in Test) dependsOn testScalaStyle).value
-(scalastyleConfig in Test) := baseDirectory.value / "project" / "scalastyle-config.xml"
+testScalaStyle := (Test / scalastyle).toTask("").value
+(Test / test) := ((Test / test) dependsOn testScalaStyle).value
+(Test / scalastyleConfig) := baseDirectory.value / "project" / "scalastyle-config.xml"
 
 lazy val compileScalaStyle = taskKey[Unit]("compileScalaStyle")
-compileScalaStyle := scalastyle.in(Compile).toTask("").value
-(test in Test) := ((test in Test) dependsOn compileScalaStyle).value
-(scalastyleConfig in Compile) := baseDirectory.value / "project" / "scalastyle-config.xml"
+compileScalaStyle := (Compile / scalastyle).toTask("").value
+(Test / test) := ((Test / test) dependsOn compileScalaStyle).value
+(Compile / scalastyleConfig) := baseDirectory.value / "project" / "scalastyle-config.xml"
 
 lazy val ensureDockerBuildx = taskKey[Unit]("Ensure that docker buildx configuration exists")
 lazy val dockerBuildWithBuildx = taskKey[Unit]("Build docker images using buildx")
@@ -98,8 +105,8 @@ lazy val dockerBuildxSettings = Seq(
         alias + " .", baseDirectory.value / "target" / "docker"/ "stage").!
     )
   },
-  publish in Docker := Def.sequential(
-    publishLocal in Docker,
+Docker / publish:= Def.sequential(
+    Docker / publishLocal,
     ensureDockerBuildx,
     dockerBuildWithBuildx
   ).value
