@@ -6,7 +6,7 @@ import spray.json.{DeserializationException, JsString, JsValue, RootJsonFormat}
 import spray.json.DefaultJsonProtocol._
 
 trait SprayJsonFormat extends SprayJsonSupport {
-  implicit val accountFormat: RootJsonFormat[Account] = jsonFormat7(Account)
+  implicit val accountFormat: RootJsonFormat[Account] = jsonFormat6(Account)
   implicit val accountsFormat: RootJsonFormat[Accounts] = jsonFormat1(Accounts)
   implicit val accountTypesFormat: RootJsonFormat[AccountTypes] = jsonFormat1(AccountTypes)
   implicit val commandResultFormat: RootJsonFormat[CommandResult] = jsonFormat1(CommandResult)

@@ -9,7 +9,7 @@ import org.mint.json.SprayJsonFormat._
 import org.mint.models.{Account, AccountTypes, Accounts, ImportStatus}
 import org.mint.repositories.Repository
 import org.mint.services.AccountService
-import org.mint.utils.RequestSupport._
+import org.mint.unit.utils.RequestSupport._
 import org.mint.utils.TestData._
 import org.scalatest.{Matchers, WordSpec}
 

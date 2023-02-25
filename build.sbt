@@ -18,7 +18,7 @@ lazy val root = (project in file("."))
     inThisBuild(List(organization := "org.mint", scalaVersion := "2.12.8")),
     name := "mint-account",
     ThisBuild / envFileName := ".env",
-    version := "0.1.0",
+    version := "1.0.0",
     scalacOptions ++= Seq("-Ypartial-unification"),
     libraryDependencies ++= Seq(
       "org.tpolecat" %% "doobie-core"      % doobieVersion,

@@ -10,7 +10,7 @@ import org.mint.endtoend.utils.TestData._
 import org.mint.json.SprayJsonFormat._
 import org.mint.models._
 import org.mint.modules.AkkaModule
-import org.mint.utils.RequestSupport._
+import org.mint.e2e.utils.RequestSupport._
 import org.scalatest.{BeforeAndAfter, Matchers, WordSpec}
 
 import scala.collection.JavaConverters._

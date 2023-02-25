@@ -16,19 +16,19 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
   extends AccountAlg[F] with StrictLogging {
 
   private val validateAccount: Account => F[Account] = {
-    case a@Account(_, "", _, _, _, _, _) =>
+    case a@Account(_, "", _, _, _, _) =>
       M.raiseError(InvalidAccount(a, "completed account must have non-empty 'name'"))
-    case a@Account(_, null, _, _, _, _, _) =>
+    case a@Account(_, null, _, _, _, _) =>
       M.raiseError(InvalidAccount(a, "completed account must have non-empty 'name'"))
-    case a@Account(_, _, "", _, _, _, _) =>
+    case a@Account(_, _, "", _, _, _) =>
       M.raiseError(InvalidAccount(a, "completed account must have non-empty 'AccountType'"))
-    case a@Account(_, _, null, _, _, _, _) =>
+    case a@Account(_, _, null, _, _, _) =>
       M.raiseError(InvalidAccount(a, "completed account must have non-empty 'AccountType'"))
-    case a@Account(_, _, _, "", _, _, _) =>
+    case a@Account(_, _, _, "", _, _) =>
       M.raiseError(InvalidAccount(a, "completed account must have non-empty 'company'"))
-    case a@Account(_, _, _, null, _, _, _) =>
+    case a@Account(_, _, _, null, _, _) =>
       M.raiseError(InvalidAccount(a, "completed account must have non-empty 'company'"))
-    case a@Account(_, _, _, _, _, _, _) => M.pure((a))
+    case a@Account(_, _, _, _, _, _) => M.pure((a))
   }
 
   override def insert(account: Account): F[Int] = {
@@ -88,10 +88,9 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
   }
 
   private def IsConfiguredForImports(account: Account): ImportStatus = {
-    val isMyAccount = account.isMyAccount
+    val isConfiguredForImport = account.isConfiguredForImport
     val isActive = account.isActive
-    val containsMapping = isNotEmpty(account.mappingFile)
-    val statusOpt = Some(isMyAccount && isActive && containsMapping)
+    val statusOpt = Some(isConfiguredForImport && isActive)
     ImportStatus(statusOpt)
   }
 

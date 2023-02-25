@@ -5,7 +5,6 @@ final case class Account(
                           name: String,
                           accountType: String,
                           company: String,
-                          isMyAccount: Boolean,
                           isActive: Boolean,
-                          mappingFile: String
+                          isConfiguredForImport: Boolean
                         )
