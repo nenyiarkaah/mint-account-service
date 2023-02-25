@@ -3,3 +3,4 @@ target
 .env
 .bsp
 sql/*
+scala-logging.log

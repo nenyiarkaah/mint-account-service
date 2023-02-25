@@ -12,8 +12,8 @@ import org.mint.services.AccountService._
 
 import scala.language.higherKinds
 
-class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwable]) extends AccountAlg[F] with StrictLogging {
-  val system: ActorSystem = ActorSystem("accounts-service")
+class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwable], system: ActorSystem)
+  extends AccountAlg[F] with StrictLogging {
 
   private val validateAccount: Account => F[Account] = {
     case a@Account(_, "", _, _, _, _, _) =>

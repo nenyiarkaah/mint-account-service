@@ -20,8 +20,8 @@ class AkkaModule(cfg: Config, featureToggles: FeatureToggles)
 
   val db = Database.forConfig("storage", cfg)
   val featureTogglesService = wire[FeatureTogglesService]
-  val repo = wire[AccountRepository]
-  val service = wire[AccountService[Future]]
+  val accountRepository = wire[AccountRepository]
+  val accountService = wire[AccountService[Future]]
   val routes = concat(wire[CommandRoutes].routes, wire[QueryRoutes].routes)
   def init(): Future[Unit] = createSchema(featureTogglesService.createSchemaIsEnabled)
 
@@ -29,7 +29,7 @@ class AkkaModule(cfg: Config, featureToggles: FeatureToggles)
 
   def createSchema(isEnabled: Boolean): Future[Unit] = {
     if (isEnabled) {
-      repo.createSchema()
+      accountRepository.createSchema()
     }
     else {
       Future.successful()

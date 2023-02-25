@@ -8,6 +8,7 @@ import akka.http.scaladsl.server.directives.MethodDirectives.get
 import akka.http.scaladsl.server.directives.PathDirectives.path
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import com.typesafe.scalalogging.StrictLogging
+import org.mint.info.BuildInfo.toJson
 import org.mint.models.{Account, AccountTypes, Accounts, ImportStatus}
 import org.mint.services.AccountService
 
@@ -60,6 +61,12 @@ class QueryRoutes (service: AccountService[Future])(
               logger.info("Account {0} is configured for import: {1}", id, isConfigured)
               complete(isConfigured)
             }
+          }
+        },
+        path("health") {
+          get {
+            logger.info("Health request")
+            complete(toJson)
           }
         }
       )

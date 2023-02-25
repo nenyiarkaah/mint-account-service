@@ -138,6 +138,19 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
     }
   }
 
+  "health" should {
+    "return 200 with version" in {
+      val request = healthRequest
+      request ~> routes ~> check {
+        commonChecks
+        val response = entityAs[String]
+        response contains "name: mint-statement"
+        response contains "version"
+        response contains "scalaVersion"
+        response contains "sbtVersion"
+      }
+    }
+  }
   private def commonChecks = {
     val expectedStatusCode = StatusCodes.OK
     val contentType = ContentTypes.`application/json`

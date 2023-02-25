@@ -1,6 +1,6 @@
 package org.mint.endtoend
 
-import akka.http.scaladsl.model.{ContentTypes, HttpRequest, StatusCodes}
+import akka.http.scaladsl.model.{ContentTypes, HttpMethods, HttpRequest, StatusCodes}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.dimafeng.testcontainers.{ForAllTestContainer, MSSQLServerContainer}
@@ -44,8 +44,8 @@ class E2ETest
   lazy val mod = new AkkaModule(cfg2, featureToggles)
 
   before {
-    Await.ready(mod.db.run(mod.repo.dropSchema()), 10.seconds)
-    Await.ready(mod.repo.createSchema(), 10.seconds)
+    Await.ready(mod.db.run(mod.accountRepository.dropSchema()), 10.seconds)
+    Await.ready(mod.accountRepository.createSchema(), 10.seconds)
   }
 
   "account" should {
@@ -232,6 +232,12 @@ class E2ETest
     }
   }
 
+  "health" should {
+    "return 200" in {
+      checkSuccessfulRequest(healthRequest)
+    }
+  }
+
   private def insertData(accounts: IndexedSeq[Account]): Unit = accounts.foreach { t =>
       var id = 1
       val insert = insertRequest(t)
@@ -269,5 +275,11 @@ class E2ETest
   private def failedRequestCheck = {
     val expectedStatusCode = StatusCodes.NotFound
     status shouldEqual expectedStatusCode
+  }
+
+  private def checkSuccessfulRequest(request: HttpRequest): Any = {
+    request ~> mod.routes ~> check {
+      commonChecks
+    }
   }
 }
