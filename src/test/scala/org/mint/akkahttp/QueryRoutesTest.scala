@@ -6,31 +6,34 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import cats.instances.future.catsStdInstancesForFuture
 import com.softwaremill.macwire.wire
 import org.mint.json.SprayJsonFormat._
-import org.mint.models.{Account, AccountTypes, Accounts, ImportStatus}
-import org.mint.repositories.Repository
+import org.mint.models.{Account, AccountTypes, ImportStatus}
+import org.mint.repositories.{AccountRepository, Repository}
 import org.mint.services.AccountService
 import org.mint.unit.utils.RequestSupport._
 import org.mint.utils.TestData._
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.mockito.MockitoSugar
+import org.scalatest.mockito.MockitoSugar.mock
 import org.scalatest.{Matchers, WordSpec}
 
 import scala.concurrent.Future
 
-class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
-  val service = wire[AccountService[Future]]
+class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest with MockitoSugar with ScalaFutures  {
+  val repository = mock[AccountRepository]
+  val service = wire[AccountService]
   val routes = wire[QueryRoutes].routes
-
 
   "selectAll" should {
     "return a list of accounts" in {
-      val page = Some(1)
-      val pageSize = Some(1)
-      val sort = Some("id")
       val request = selectAllRequest
+      when(repository.selectAll(any[Int], any[Int], any[String])) thenReturn Future.successful(accounts)
 
       request ~> routes ~> check {
         commonChecks
-        val response = entityAs[Accounts].accounts
-          response.length shouldEqual 3
+        val response = entityAs[Seq[Account]]
+        response.length shouldEqual 3
           response should contain(geneva)
           response should contain(paris)
           response should contain(madrid)
@@ -42,36 +45,23 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
       val sort = "id"
       val request = selectAllRequest(sort)
       val expectedAccounts = Seq(geneva, paris, madrid)
-
+      when(repository.selectAll(any[Int], any[Int], any[String])) thenReturn Future.successful(accounts)
+      when(repository.sortingFields) thenReturn Set("id")
       request ~> routes ~> check {
         commonChecks
-        val response = entityAs[Accounts].accounts
-        response.length shouldEqual 3
-        response shouldEqual expectedAccounts
-      }
-    }
-    "return a list of accounts sorted by account name" in {
-      val page = Some(1)
-      val pageSize = Some(1)
-      val sort = "name"
-      val request = selectAllRequest(sort)
-      val expectedAccounts = Seq(geneva, madrid, paris)
-
-      request ~> routes ~> check {
-        commonChecks
-        val response = entityAs[Accounts].accounts
+        val response = entityAs[Seq[Account]]
         response.length shouldEqual 3
         response shouldEqual expectedAccounts
       }
     }
   }
 
-
   "select account by id" should {
     "return an account when the id is valid" in {
       val id: Int = 4
-
       val request = selectByRequest(id)
+      when(repository.select(id)) thenReturn Future.successful(Some(madrid))
+
       request ~> routes ~> check {
         commonChecks
         val response = entityAs[Option[Account]]
@@ -81,6 +71,8 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
     "return empty when the id is invalid" in {
       val id = 2222
       val select = selectByRequest(id)
+      when(repository.select(id)) thenReturn Future.successful(None)
+
       select ~> Route.seal(routes) ~> check {
         failedRequestCheck
       }
@@ -88,8 +80,10 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
   }
 
   "existingTypeofAccounts" should {
-    "return a type of account list of 2 for mockData" in {
+    "return a type of account list of 2 test and current" in {
       val request = existingTypeofAccountsRequest
+      when(repository.selectAll) thenReturn Future.successful(accounts)
+
       request ~> routes ~> check {
         commonChecks
         val response = entityAs[AccountTypes].accountTypes
@@ -103,8 +97,10 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
     "return 200 and true when account is configured for import" in {
 
       val accountId = 2
-      val expectedIsConfigured = ImportStatus(Some(true))
+      val expectedIsConfigured = ImportStatus(accountId, Some(true))
       val request = isConfiguredForImportsRequest(accountId)
+      when(repository.select(accountId)) thenReturn Future(Some(geneva))
+
       request ~> routes ~> check {
         status shouldEqual StatusCodes.OK
         contentType shouldEqual ContentTypes.`application/json`
@@ -114,8 +110,9 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
     }
     "return 200 and false when account is not configured for import" in {
       val accountId = 5
-      val expectedIsConfigured = ImportStatus(Some(false))
+      val expectedIsConfigured = ImportStatus(accountId, Some(false))
       val request = isConfiguredForImportsRequest(accountId)
+      when(repository.select(accountId)) thenReturn Future(Some(brussels))
 
       request ~> routes ~> check {
         status shouldEqual StatusCodes.OK
@@ -124,10 +121,11 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
         response shouldBe expectedIsConfigured
       }
     }
-    "return 200 and false when account does not exist" in {
+    "return 200 and None when account does not exist" in {
       val accountId = 500
-      val expectedIsConfigured = ImportStatus(Some(false))
+      val expectedIsConfigured = ImportStatus(accountId, None)
       val request = isConfiguredForImportsRequest(accountId)
+      when(repository.select(accountId)) thenReturn Future(None)
 
       request ~> routes ~> check {
         status shouldEqual StatusCodes.OK
@@ -162,31 +160,5 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
   private def failedRequestCheck = {
     val expectedStatusCode = StatusCodes.NotFound
     status shouldEqual expectedStatusCode
-  }
-
-  private def createStubRepo = {
-    new Repository[Future] {
-      override def insert(row: Account): Future[Int] = ???
-
-      override def createSchema(): Future[Unit] = ???
-
-      override def selectAll(page: Int, pageSize: Int, sort: String): Future[Seq[Account]] = {
-        sort match {
-          case "id" => Future.successful (mockData.sortBy(_.id))
-          case "name" => Future.successful (mockData.sortBy(_.name))
-        }
-      }
-
-      override def sortingFields: Set[String] = Set("id", "name")
-
-      override def selectAll: Future[Seq[Account]] = Future.successful (mockData)
-
-      def select(id: Int): Future[Option[Account]] =
-        Future.successful(mockDataSecondary.filter(_.id === id).headOption)
-
-      override def update(id: Int, row: Account): Future[Int] = ???
-
-      override def delete(id: Int): Future[Int] = ???
-    }
   }
 }

@@ -21,7 +21,7 @@ class AkkaModule(cfg: Config, featureToggles: FeatureToggles)
   val db = Database.forConfig("storage", cfg)
   private val featureTogglesService = wire[FeatureTogglesService]
   val accountRepository = wire[AccountRepository]
-  val accountService = wire[AccountService[Future]]
+  val accountService = wire[AccountService]
   val routes = concat(wire[CommandRoutes].routes, wire[QueryRoutes].routes)
   def init(): Future[Unit] = createSchema(featureTogglesService.createSchemaIsEnabled)
 

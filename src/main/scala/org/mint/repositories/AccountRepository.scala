@@ -7,8 +7,7 @@ import slick.sql.FixedSqlAction
 
 import scala.concurrent.Future
 
-class AccountRepository(db: Database) extends Repository[Future] with StrictLogging {
-
+class AccountRepository(db: Database) extends ARepository with StrictLogging {
   val accounts = TableQuery[Accounts]
   private val sorting = Map(
     "id" -> accounts.sortBy(_.id)

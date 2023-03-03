@@ -1,5 +1,7 @@
 package org.mint.repositories
 
-trait ARepository {
+import org.mint.models.Account
+
+trait ARepository extends Repository[Account] {
 
 }

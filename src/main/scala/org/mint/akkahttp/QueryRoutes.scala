@@ -9,15 +9,14 @@ import akka.http.scaladsl.server.directives.PathDirectives.path
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import com.typesafe.scalalogging.StrictLogging
 import org.mint.info.BuildInfo.toJson
-import org.mint.models.{Account, AccountTypes, Accounts, ImportStatus}
+import org.mint.models.{Account, AccountTypes, ImportStatus}
 import org.mint.services.AccountService
+import scala.concurrent.ExecutionContext
+import org.mint.json.SprayJsonFormat._
 
-import scala.concurrent.{ExecutionContext, Future}
-
-class QueryRoutes (service: AccountService[Future])(
+class QueryRoutes (service: AccountService)(
   implicit ec: ExecutionContext,
   system: ActorSystem,
-  ts: ToResponseMarshaller[Accounts],
   actt: ToResponseMarshaller[AccountTypes],
   a: ToResponseMarshaller[Account],
   is: ToResponseMarshaller[ImportStatus]
@@ -57,7 +56,7 @@ class QueryRoutes (service: AccountService[Future])(
           get {
             parameter("id") { sId =>
               val id = sId.toInt
-              val isConfigured = service.IsConfiguredForImports(id)
+              val isConfigured = service.isConfiguredForImports(id)
               logger.info("Account {0} is configured for import: {1}", id, isConfigured)
               complete(isConfigured)
             }

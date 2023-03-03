@@ -1,13 +1,14 @@
 package org.mint.services
 
-import org.mint.models.{Account, AccountTypes, Accounts}
+import org.mint.models.{Account, AccountTypes}
 
-trait AccountAlg[F[_]] {
-  def selectAll(page: Option[Int], pageSize: Option[Int], sort: Option[String]): F[Accounts]
-  def selectAll: F[Seq[Account]]
-  def select(id: Int): F[Option[Account]]
-  def insert(account: Account): F[Int]
-  def existingTypeofAccounts: F[AccountTypes]
-  def update(id: Int, account: Account): F[Int]
-  def delete(id: Int): F[Int]
+import scala.concurrent.Future
+
+trait Alg[T] {
+  def selectAll(page: Option[Int], pageSize: Option[Int], sort: Option[String]): Future[Seq[T]]
+  def selectAll: Future[Seq[T]]
+  def select(id: Int): Future[Option[T]]
+  def insert(entity: T): Future[Int]
+  def update(id: Int, entity: T): Future[Int]
+  def delete(id: Int): Future[Int]
 }

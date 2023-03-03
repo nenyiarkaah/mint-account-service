@@ -6,16 +6,21 @@ import cats.syntax.flatMap._
 import cats.syntax.functor._
 import com.typesafe.scalalogging.StrictLogging
 import org.mint.Exceptions.{InvalidAccount, UnknownSortField}
-import org.mint.models.{Account, AccountTypes, Accounts, ImportStatus}
-import org.mint.repositories.Repository
+import org.mint.models.{Account, AccountTypes, ImportStatus}
+import org.mint.repositories.{ARepository, Repository}
 import org.mint.services.AccountService._
 
+import scala.concurrent.{ExecutionContext, Future}
 import scala.language.higherKinds
 
-class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwable], system: ActorSystem)
-  extends AccountAlg[F] with StrictLogging {
+class AccountService(repo: ARepository)(implicit
+                                              M: MonadError[Future,
+                                                Throwable],
+                                              system: ActorSystem,
+                                              ec: ExecutionContext)
+  extends Alg[Account] with AlgAccount with StrictLogging {
 
-  private val validateAccount: Account => F[Account] = {
+  private val validateAccount: Account => Future[Account] = {
     case a@Account(_, "", _, _, _, _) =>
       M.raiseError(InvalidAccount(a, "completed account must have non-empty 'name'"))
     case a@Account(_, null, _, _, _, _) =>
@@ -31,7 +36,7 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
     case a@Account(_, _, _, _, _, _) => M.pure((a))
   }
 
-  override def insert(account: Account): F[Int] = {
+  override def insert(account: Account): Future[Int] = {
       for {
         validatedByFields <- validateAccount(account)
         validatedByName <- validateAccountDoesNotExist(validatedByFields)
@@ -39,34 +44,36 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
       } yield id
   }
 
-  override def existingTypeofAccounts: F[AccountTypes]  = {
+  override def existingTypeofAccounts: Future[AccountTypes]  = {
     for {
       existingAccounts <- selectAll
     } yield existingTypeofAccounts(existingAccounts)
   }
 
-  override def selectAll(page: Option[Int], pageSize: Option[Int], sort: Option[String]): F[Accounts] = {
+  override def selectAll(page: Option[Int], pageSize: Option[Int], sort: Option[String]): Future[Seq[Account]] = {
     val sortBy = sort
       .map(s => repo.sortingFields.find(_ == s).toRight(UnknownSortField(s)))
       .getOrElse(Right(DefaultSortField))
 
     M.fromEither(sortBy).flatMap { sort =>
+      val page11 = 1
+
       val pageN = page.getOrElse(DefaultPage)
       val size = pageSize.getOrElse(DefaultPageSize)
 
       repo
         .selectAll(pageN, size, sort)
-        .map(Accounts)
+//        .map(Accounts)
     }
   }
 
-  override def selectAll: F[Seq[Account]] = {
+  override def selectAll: Future[Seq[Account]] = {
     repo.selectAll
   }
 
-  override def select(id: Int): F[Option[Account]] = repo.select(id)
+  override def select(id: Int): Future[Option[Account]] = repo.select(id)
 
-  override def update(id: Int, account: Account): F[Int] = {
+  override def update(id: Int, account: Account): Future[Int] = {
     for {
       validatedByFields <- validateAccount(account)
       validatedByName <- validateAccountDoesNotExist(validatedByFields)
@@ -75,23 +82,24 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
     repo.update(id, account)
   }
 
-  override def delete(id: Int): F[Int] = repo.delete(id)
+  override def delete(id: Int): Future[Int] = repo.delete(id)
 
-  def IsConfiguredForImports(id: Int): F[ImportStatus] = {
+  def isConfiguredForImports(id: Int): Future[ImportStatus] = {
     for {
       act <- repo.select(id)
     } yield act match {
-      case None => ImportStatus(Some(false))
-      case Some(a) => IsConfiguredForImports(a)
-      case _ => ImportStatus(Some(false))
+      case None => ImportStatus(id, None)
+      case Some(a) => isConfiguredForImports(a)
+      case _ => ImportStatus(id, Some(false))
     }
   }
 
-  private def IsConfiguredForImports(account: Account): ImportStatus = {
+  private def isConfiguredForImports(account: Account): ImportStatus = {
     val isConfiguredForImport = account.isConfiguredForImport
     val isActive = account.isActive
     val statusOpt = Some(isConfiguredForImport && isActive)
-    ImportStatus(statusOpt)
+    val id = account.id
+    ImportStatus(id, statusOpt)
   }
 
   private def isNotEmpty(x: String) = !(x == null || x.trim.isEmpty)
@@ -102,7 +110,7 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
     AccountTypes(accountTypes)
   }
 
-  private def doesAccountNameAlreadyExist(account: Account, accounts: Seq[Account]): F[Account] = {
+  private def doesAccountNameAlreadyExist(account: Account, accounts: Seq[Account]): Future[Account] = {
     val name = account.name
     val names = getAccountNames(accounts)
     val isNameInAccountsList = names
@@ -121,7 +129,7 @@ class AccountService[F[_]](repo: Repository[F])(implicit M: MonadError[F, Throwa
     accounts.map(_.name)
   }
 
-  private def validateAccountDoesNotExist(a: Account): F[Account] = {
+  private def validateAccountDoesNotExist(a: Account): Future[Account] = {
     for {
       existingAccounts <- selectAll
       doesAccountNameAlreadyExist <- doesAccountNameAlreadyExist(a, existingAccounts)

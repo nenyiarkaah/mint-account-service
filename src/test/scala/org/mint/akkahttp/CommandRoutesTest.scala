@@ -6,26 +6,32 @@ import cats.instances.future.catsStdInstancesForFuture
 import com.softwaremill.macwire.wire
 import org.mint.json.SprayJsonFormat._
 import org.mint.models.{Account, CommandResult}
-import org.mint.repositories.Repository
+import org.mint.repositories.{AccountRepository, Repository}
 import org.mint.services.AccountService
 import org.mint.unit.utils.RequestSupport._
 import org.mint.utils.TestData._
+import org.mockito.Mockito.when
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.mockito.MockitoSugar
+import org.scalatest.mockito.MockitoSugar.mock
 import org.scalatest.{Matchers, WordSpec}
 
 import scala.concurrent.Future
 
-class CommandRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
-  val service = wire[AccountService[Future]]
+class CommandRoutesTest extends WordSpec with Matchers with ScalatestRouteTest with MockitoSugar with ScalaFutures  {
+  val repository = mock[AccountRepository]
+  val service = wire[AccountService]
   val routes = wire[CommandRoutes].routes
 
   "insert" should {
     "insert new valid account and return it's id" in {
       val request = insertRequest(berlin)
-
+      val expectedId = 1
+      when(repository.selectAll) thenReturn Future.successful(accounts)
+      when(repository.insert(berlin)) thenReturn Future.successful(expectedId)
       request ~> routes ~> check {
         commonChecks
         val count = entityAs[CommandResult].id
-        val expectedId = 1
         count shouldEqual expectedId
       }
     }
@@ -55,7 +61,8 @@ class CommandRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
   "update" should {
     "update existing account with valid name and return it's id" in {
       val request = updateRequest(berlin, berlin.id)
-      val expectedId = 1
+      val expectedId = berlin.id
+      when(repository.update( berlin.id, berlin)) thenReturn Future.successful(expectedId)
 
       request ~> routes ~> check {
         commonChecks
@@ -68,6 +75,7 @@ class CommandRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
       "delete an account based on id" in {
         val id = berlin.id
         val request = deleteRequest(id)
+        when(repository.delete(id)) thenReturn Future.successful(id)
 
         request ~> routes ~> check {
           commonChecks
@@ -81,25 +89,5 @@ class CommandRoutesTest extends WordSpec with Matchers with ScalatestRouteTest {
   private def commonChecks = {
     status shouldEqual StatusCodes.OK
     contentType shouldEqual ContentTypes.`application/json`
-  }
-
-  private def createStubRepo = {
-    new Repository[Future] {
-      override def insert(row: Account): Future[Int] = Future.successful(accountId)
-
-      override def createSchema(): Future[Unit] = Future.successful(())
-
-      override def selectAll(page: Int, pageSize: Int, sort: String): Future[Seq[Account]] = ???
-
-      override def sortingFields: Set[String] = ???
-
-      override def selectAll: Future[Seq[Account]] = Future.successful(mockData)
-
-      override def select(id: Int): Future[Option[Account]] = ???
-
-      override def update(id: Int, row: Account): Future[Int] = Future.successful(accountId)
-
-      override def delete(id: Int): Future[Int] = Future.successful(accountId)
-    }
   }
 }

@@ -16,7 +16,7 @@ import scala.concurrent.Future
 
 class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestRouteTest with ScalaFutures with MockitoSugar {
   val mockRepository = mock[AccountRepository]
-  val service = new AccountService[Future](mockRepository)
+  val service = new AccountService(mockRepository)
   when(mockRepository.sortingFields) thenReturn(Set("id", "name"))
 
   "insert" should {
@@ -84,7 +84,7 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
       whenReady(service.selectAll(None, None, None))
       {
         result =>
-          val accounts = result.accounts
+          val accounts = result
           accounts.length shouldEqual 3
           accounts should contain(brussels)
           accounts should contain(paris)
@@ -100,7 +100,7 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
       whenReady(service.selectAll(None, None, Some("id")))
       {
         result =>
-          val accounts = result.accounts
+          val accounts = result
           accounts.length shouldEqual 3
           accounts shouldEqual Seq(paris, madrid, brussels)
       }
@@ -113,7 +113,7 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
       whenReady(service.selectAll(None, None, Some("name")))
       {
         result =>
-          val accounts = result.accounts
+          val accounts = result
           accounts.length shouldEqual 3
           accounts shouldEqual Seq(brussels, madrid, paris)
       }
@@ -190,45 +190,45 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
   "isConfiguredForImports" should {
     "return true when account is configured for import" in {
       val accountId = 1
-      val expectedIsConfigured = ImportStatus(Some(true))
+      val expectedIsConfigured = ImportStatus(accountId, Some(true))
       when(mockRepository.select(accountId)) thenReturn (Future(Some(berlin)))
-      whenReady(service.IsConfiguredForImports(accountId)) {
+      whenReady(service.isConfiguredForImports(accountId)) {
         result =>
           result shouldBe expectedIsConfigured
       }
     }
     "return false if the account exists and is not configured for importing" in {
-      val accountId = 1
-      val expectedIsConfigured = ImportStatus(Some(false))
+      val accountId = 5
+      val expectedIsConfigured = ImportStatus(accountId, Some(false))
       when(mockRepository.select(accountId)) thenReturn (Future(Some(brussels)))
-      whenReady(service.IsConfiguredForImports(accountId)) {
+      whenReady(service.isConfiguredForImports(accountId)) {
         result =>
           result shouldBe expectedIsConfigured
       }
     }
     "return false if the account exists and is not my account" in {
       val accountId = 7
-      val expectedIsConfigured = ImportStatus(Some(false))
+      val expectedIsConfigured = ImportStatus(accountId, Some(false))
       when(mockRepository.select(accountId)) thenReturn (Future(Some(rome)))
-      whenReady(service.IsConfiguredForImports(accountId)) {
+      whenReady(service.isConfiguredForImports(accountId)) {
         result =>
           result shouldBe expectedIsConfigured
       }
     }
     "return false if the account exists and is not active" in {
       val accountId = 8
-      val expectedIsConfigured = ImportStatus(Some(false))
+      val expectedIsConfigured = ImportStatus(accountId, Some(false))
       when(mockRepository.select(accountId)) thenReturn (Future(Some(athens)))
-      whenReady(service.IsConfiguredForImports(accountId)) {
+      whenReady(service.isConfiguredForImports(accountId)) {
         result =>
           result shouldBe expectedIsConfigured
       }
     }
     "return false if the account does not exist" in {
       val accountId = 122
-      val expectedIsConfigured = ImportStatus(Some(false))
+      val expectedIsConfigured = ImportStatus(accountId, None)
       when(mockRepository.select(accountId)) thenReturn (Future(None))
-      whenReady(service.IsConfiguredForImports(accountId)) {
+      whenReady(service.isConfiguredForImports(accountId)) {
         result =>
           result shouldBe expectedIsConfigured
       }

@@ -15,7 +15,7 @@ import org.mint.services.AccountService
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-class CommandRoutes(service: AccountService[Future])(
+class CommandRoutes(service: AccountService)(
   implicit ec: ExecutionContext,
   system: ActorSystem,
   w: GenericJsonWriter[CommandResult],

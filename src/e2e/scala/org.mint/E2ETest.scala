@@ -81,7 +81,7 @@ class E2ETest
         request ~> mod.routes ~> check {
           status shouldEqual StatusCodes.OK
           contentType shouldEqual ContentTypes.`application/json`
-          val response = entityAs[Accounts].accounts
+          val response = entityAs[Seq[Account]]
           response.length shouldEqual 3
           response should contain(geneva)
           response should contain(paris)
@@ -99,7 +99,7 @@ class E2ETest
         request ~> mod.routes ~> check {
           status shouldEqual StatusCodes.OK
           contentType shouldEqual ContentTypes.`application/json`
-          val response = entityAs[Accounts].accounts
+          val response = entityAs[Seq[Account]]
           response.length shouldEqual 4
           response should contain(geneva)
           response should contain(paris)
@@ -206,7 +206,7 @@ class E2ETest
   "isConfiguredForImports" should {
     "return 200 and true when account is configured for import" in {
       val accountId = 1
-      val expectedIsConfigured = ImportStatus(Some(true))
+      val expectedIsConfigured = ImportStatus(accountId, Some(true))
       val request = isConfiguredForImportsRequest(accountId)
       insertData(mockDataForEndToEnd)
 
@@ -219,7 +219,7 @@ class E2ETest
     }
     "return 200 and false when account is not configured for import" in {
       val accountId = 5
-      val expectedIsConfigured = ImportStatus(Some(false))
+      val expectedIsConfigured = ImportStatus(accountId, Some(false))
       val request = isConfiguredForImportsRequest(accountId)
       insertData(mockDataForEndToEndTertiary)
 
