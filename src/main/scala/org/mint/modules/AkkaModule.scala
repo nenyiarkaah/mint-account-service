@@ -19,7 +19,7 @@ class AkkaModule(cfg: Config, featureToggles: FeatureToggles)
                 (implicit system: ActorSystem, ec: ExecutionContext) extends StrictLogging {
 
   val db = Database.forConfig("storage", cfg)
-  val featureTogglesService = wire[FeatureTogglesService]
+  private val featureTogglesService = wire[FeatureTogglesService]
   val accountRepository = wire[AccountRepository]
   val accountService = wire[AccountService[Future]]
   val routes = concat(wire[CommandRoutes].routes, wire[QueryRoutes].routes)
