@@ -230,6 +230,19 @@ class E2ETest
         response shouldBe expectedIsConfigured
       }
     }
+    "return 200 and false when account does not exist" in {
+      val accountId = 500
+      val expectedIsConfigured = ImportStatus(accountId, None)
+      val request = isConfiguredForImportsRequest(accountId)
+      insertData(mockDataForEndToEndTertiary)
+
+      request ~> mod.routes ~> check {
+        status shouldEqual StatusCodes.OK
+        contentType shouldEqual ContentTypes.`application/json`
+        val response = entityAs[ImportStatus]
+        response shouldBe expectedIsConfigured
+      }
+    }
   }
 
   "health" should {

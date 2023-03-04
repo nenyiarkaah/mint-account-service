@@ -28,7 +28,7 @@ lazy val root = (project in file("."))
       "org.http4s" %% "http4s-dsl" % http4sVersion,
       "io.circe" %% "circe-generic" % circeVersion,
       "io.circe" %% "circe-java8" % circeVersion,
-      "org.typelevel" %% "cats-core" % "1.4.0",
+      "org.typelevel" %% "cats-core" % "2.0.0",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
       "ch.qos.logback" % "logback-classic" % "1.2.3",
       "org.postgresql" % "postgresql" % "9.4-1203-jdbc4",
