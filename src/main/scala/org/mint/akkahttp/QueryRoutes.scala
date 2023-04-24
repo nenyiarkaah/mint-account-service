@@ -30,7 +30,7 @@ class QueryRoutes (service: AccountService)(
         pathEndOrSingleSlash {
           get {
             parameters('sort.?, 'page.as[Int].?, 'pageSize.as[Int].?) { (sort, page, pageSize) =>
-              logger.info("Select all sorted by '{}'", sort)
+              logger.info(s"Select all sorted by '$sort'")
               val accounts = service.selectAll(page, pageSize, sort)
               complete(accounts)
             }
@@ -39,7 +39,7 @@ class QueryRoutes (service: AccountService)(
         path(IntNumber) { id =>
           concat(get {
             val maybeAccount = service.select(id)
-            logger.debug("Found account: {}", maybeAccount)
+            logger.debug(s"Found account: $maybeAccount")
             rejectEmptyResponse {
               complete(maybeAccount)
             }
@@ -57,7 +57,7 @@ class QueryRoutes (service: AccountService)(
             parameter("id") { sId =>
               val id = sId.toInt
               val isConfigured = service.isConfiguredForImports(id)
-              logger.info("Account {0} is configured for import: {1}", id, isConfigured)
+              logger.info(s"Account $id is configured for import: $isConfigured")
               complete(isConfigured)
             }
           }
