@@ -13,7 +13,6 @@ import org.mint.modules.AkkaModule
 import org.mint.e2e.utils.RequestSupport._
 import org.scalatest.{BeforeAndAfter, Matchers, WordSpec}
 
-import scala.collection.JavaConverters._
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
@@ -26,17 +25,17 @@ class E2ETest
 
   val container = MSSQLServerContainer("mcr.microsoft.com/mssql/server:2017-latest")
 
-  lazy val cfg2: Config = ConfigFactory.load(
-    ConfigFactory
-      .parseMap(
-        Map(
-          "name" -> container.dockerImageName,
-          "url" -> container.jdbcUrl,
-          "user" -> container.username,
-          "password" -> container.password
-        ).asJava
-      )
-      .atKey("storage")
+  lazy val cfg2: Config = ConfigFactory.parseString(
+    s"""
+      |storage {
+      |  url = "${container.jdbcUrl}"
+      |  driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+      |  user = "${container.username}"
+      |  password = "${container.password}"
+      |  connectionTimeout = 1024
+      |  maximumPoolSize = 100
+      |}
+    """.stripMargin
   )
   val (server, storage, featureToggles, cfg) =
     load.fold(e => sys.error(s"Failed to load configuration:\n${e.toList.mkString("\n")}"), identity)

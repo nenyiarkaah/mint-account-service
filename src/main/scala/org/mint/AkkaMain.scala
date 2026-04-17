@@ -2,7 +2,6 @@ package org.mint
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.StrictLogging
 import org.mint.configs.AppConfig
 import org.mint.modules.AkkaModule
@@ -13,7 +12,6 @@ import scala.util.{Failure, Success}
 
 object AkkaMain extends App with StrictLogging {
   implicit val system: ActorSystem = ActorSystem("accounts-service")
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val ec: ExecutionContext = system.dispatcher
 
   val (server, storage, featureToggles, cfg) =
@@ -38,7 +36,7 @@ object AkkaMain extends App with StrictLogging {
   val mod = new AkkaModule(cfg, featureToggles)
   mod.init().failed.foreach(t => logger.error("Failed to initialize Accounts module", t))
 
-  val serverBinding = Http().bindAndHandle(mod.routes, server.host.value, server.port.value)
+  val serverBinding = Http().newServerAt(server.host.value, server.port.value).bind(mod.routes)
 
   serverBinding.onComplete {
     case Success(b) =>

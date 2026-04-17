@@ -79,7 +79,6 @@ class AccountService(repo: ARepository)(implicit
       validatedByName <- validateAccountDoesNotExist(validatedByFields)
       id <- repo.update(id, validatedByName)
     } yield id
-    repo.update(id, account)
   }
 
   override def delete(id: Int): Future[Int] = repo.delete(id)
@@ -90,7 +89,6 @@ class AccountService(repo: ARepository)(implicit
     } yield act match {
       case None => ImportStatus(id, None)
       case Some(a) => isConfiguredForImports(a)
-      case _ => ImportStatus(id, Some(false))
     }
   }
 

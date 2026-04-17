@@ -4,3 +4,5 @@ target
 .bsp
 sql/*
 scala-logging.log
+graphify-out
+test.env

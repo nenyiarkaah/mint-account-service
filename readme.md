@@ -1,72 +1,150 @@
-## Mint Account - Microservice
+# mint-account-service
 
-A Lesson in separating out account responsibilities from the monolithic mint service.
-The patterns and practice are from [CRUD Microservice with AkkaHttp](https://medium.com/se-notes-by-alexey-novakov/crud-microservice-with-akkahttp-c914059bcf9f).
+A Scala microservice for managing financial accounts, extracted from the Mint monolith. Provides a REST API for creating, updating, deleting, and querying accounts stored in MS SQL Server.
 
-##### Functionality
-- The ability to create an account given the account name doesn't already exist.
+Built with Akka HTTP following the patterns from [CRUD Microservice with AkkaHttp](https://medium.com/se-notes-by-alexey-novakov/crud-microservice-with-akkahttp-c914059bcf9f).
 
-#### Prerequisites
-- IDE - in this case I am using JetBrains IntelliJ IDEA
-- Java JDK version - 1.8
+![Version](https://img.shields.io/badge/version-2.0.1-blue)
+![Scala](https://img.shields.io/badge/scala-2.12.8-red)
+![Java](https://img.shields.io/badge/java-11-orange)
+
+## Prerequisites
+
+- Java 11 — set up with: `sdk use java 11.0.25-tem`
 - SBT
-- Docker Desktop [Mac](https://docs.docker.com/docker-for-mac/install/), [Windows](https://docs.docker.com/docker-for-windows/install/) and [Linux](https://docs.docker.com/engine/install/)
+- Docker Desktop ([Mac](https://docs.docker.com/docker-for-mac/install/), [Windows](https://docs.docker.com/docker-for-windows/install/), [Linux](https://docs.docker.com/engine/install/)) — required for E2E tests
 
-### Running Tests
-Tests are located in 
-
-```mint-account -> src -> test -> scala -> org.mint```
-
-```mint-account -> src -> e2e -> scala -> org.mint```
-
-There are 4 kinds of tests
-- Code Style Tests
-These are used to make sure when writing that code styles are adhered to. 
-- Unit Tests (Service Tests)
-These use Mockito to mock the repository layer  and work by using ```when(repository method is called) return(value)```.
-- Integration Tests (CommandRoute & QueryRoute Tests)
-These tests use macwire for autowiring the service and repository layer.  
-- End to End Tests
-These test start up the application plus any dependencies stated in this case SQL Server instance (this requires Docker Desktop)
-Each endpoint will be checked for an expected response based on a number of scenarios.
-
-To run the tests you can either use the IDE or SBT
-The IDE should have a right click option to run tests
-SBT commands: 
-- `sbt test:scalastyle` (runs Code Style)
-- `sbt test` (runs Code Style, Unit & Integration Tests)
-- `sbt e2e:test` (run End to end Tests)
-
-### Run with Docker Compose
-
-#### Requirements
-
-- Docker daemon needs to be available for SBT packager plugin
-
-#### Build Docker image
-
-First you need to build an image. In order to do that just run SBT commands to build a service image:
+## Running Locally
 
 ```bash
-sbt stage
-sbt docker:publishLocal
+sbt compile
+sbt run
 ```
 
-#### Run Docker image
+The service starts on the port configured in `application.conf` (default: `8080`). Local environment variables can be set in `.env`.
+
+To auto-create the database schema on startup, set `featureToggles.createSchema = true` in config.
+
+## Architecture
+
+The service follows a strict three-layer architecture:
+
+```
+akkahttp/       → HTTP routes (CommandRoutes, QueryRoutes)
+services/       → Business logic (AccountService)
+repositories/   → Data access (AccountRepository via Slick)
+```
+
+Supporting packages:
+
+| Package | Purpose |
+|---|---|
+| `models/` | Domain types (`Account`, `CommandResult`, `ImportStatus`, `AccountTypes`) |
+| `configs/` | PureConfig-backed `AppConfig` with Refined type constraints |
+| `modules/` | `AkkaModule`: MacWire wiring point that composes DB, services, and routes |
+| `Exceptions/` | Sealed `UserError` ADT (`InvalidAccount`, `UnknownSortField`) |
+| `json/` | `GenericJsonWriter[T]` abstraction over Spray JSON formatters |
+
+Entry point: `AkkaMain.scala` → delegates to `AkkaModule.init()`.
+
+## Configuration
+
+Runtime config is loaded from `src/main/resources/application.conf` via PureConfig. Override any value with an environment variable or a `.env` file in the project root.
+
+Key configuration options:
+
+| Key | Description |
+|---|---|
+| `jdbc.url` | JDBC connection string (validated against a JDBC regex at startup) |
+| `jdbc.connectionTimeout` | Connection timeout in ms — must be between 0 and 100 000 |
+| `jdbc.maximumPoolSize` | HikariCP pool size — must be between 0 and 100 |
+| `featureToggles.createSchema` | Auto-create the DB schema on startup (`true`/`false`) |
+
+Invalid config causes a startup failure, not a runtime error.
+
+## Testing
 
 ```bash
-docker-compose -f composed/docker-compose.yml up -d
+sbt compileScalaStyle          # Lint / code style
+sbt +ut:test                   # Unit tests
+sbt +it:test                   # Integration tests
+sbt +e2e:test                  # End-to-end tests (requires Docker)
+sbt "ut:testOnly *ClassName*"  # Run a single test class
 ```
 
-#### Stop Docker image
+**Test types:**
+
+| Layer | Location | Approach |
+|---|---|---|
+| Lint | — | ScalaStyle, runs automatically before unit tests |
+| Unit | `src/test/` (services/) | ScalaTest AsyncWordSpec + Mockito; mocks the repository |
+| Integration | `src/test/` (akkahttp/) | Akka HTTP `ScalatestRouteTest`; tests routes with wired services |
+| E2E | `src/e2e/` | TestContainers (real MS SQL Server); full stack, no mocks |
+
+E2E tests require Docker. The SQL Server container starts once per suite; schema is created and torn down in `beforeAll`/`afterAll`.
+
+## Docker
 
 ```bash
-docker-compose -f composed/docker-compose.yml down -v
+sbt docker:publishLocal             # Build local image
+sbt docker:dockerBuildWithBuildx    # Build multi-arch image (ARM + AMD64)
 ```
 
-#### Assumptions
+To run with Docker Compose:
 
-Currently this service connects to a Microsoft SQL Server. The assumption is that the server is already instantiated.
+```bash
+docker-compose -f src/e2e/resources/docker-compose.yml up -d
+docker-compose -f src/e2e/resources/docker-compose.yml down -v
+```
 
-##TODO
-Write docker script to spin up MS SQL container.
+## API
+
+All endpoints are prefixed with `/api/accounts`.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/accounts` | List accounts. Query params: `sort`, `page`, `pageSize` |
+| `GET` | `/api/accounts/:id` | Get account by ID |
+| `POST` | `/api/accounts` | Create a new account |
+| `PUT` | `/api/accounts/:id` | Update an account |
+| `DELETE` | `/api/accounts/:id` | Delete an account |
+| `GET` | `/api/accounts/existingtypeofaccounts` | Get distinct account types |
+| `GET` | `/api/accounts/isconfiguredforimports?id=:id` | Check if account is configured for imports |
+| `GET` | `/api/accounts/health` | Health check (returns build info) |
+
+### Account Model
+
+```json
+{
+  "id": 1,
+  "name": "My Account",
+  "accountType": "Savings",
+  "company": "Some Bank",
+  "isActive": true,
+  "isConfiguredForImport": false
+}
+```
+
+### Sort Fields
+
+The `sort` query parameter accepts: `id`, `name`, `accountType`, `company`, `isActive`, `isConfiguredForImport`.
+
+### Responses
+
+| Status | Meaning |
+|---|---|
+| `200 OK` | Success, returns JSON |
+| `412 Precondition Failed` | Validation error (e.g. duplicate name, missing required field) |
+| `500 Internal Server Error` | Unexpected failure |
+
+## Contributing
+
+1. Fork the repository and create a feature branch
+2. Make your changes — every code change must have a corresponding test
+3. Run the full test suite before opening a PR:
+   ```bash
+   sbt +ut:test
+   sbt +it:test
+   sbt +e2e:test
+   ```
+4. Open a pull request against `main`

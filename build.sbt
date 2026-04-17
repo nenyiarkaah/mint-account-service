@@ -2,10 +2,9 @@ import E2E._
 import Unit._
 import scala.sys.process.Process
 
-lazy val akkaHttpVersion = "10.1.6"
-lazy val akkaVersion = "2.5.19"
-lazy val slickVersion = "3.2.3"
-lazy val upickleVersion = "0.6.7"
+lazy val akkaHttpVersion = "10.2.10"
+lazy val akkaVersion = "2.6.21"
+lazy val slickVersion = "3.4.1"
 lazy val http4sVersion = "0.19.0-M4"
 lazy val circeVersion = "0.11.1"
 lazy val doobieVersion = "0.6.0"
@@ -15,7 +14,7 @@ lazy val root = (project in file("."))
   .settings(
     e2eSettings,
     dockerBuildxSettings,
-    inThisBuild(List(organization := "org.mint", scalaVersion := "2.12.8")),
+    inThisBuild(List(organization := "org.mint", scalaVersion := "2.12.20")),
     name := "mint-account",
     ThisBuild / envFileName := ".env",
     version := "2.0.1",
@@ -41,19 +40,16 @@ lazy val root = (project in file("."))
       "com.typesafe.akka" %% "akka-stream" % akkaVersion,
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % Test,
       "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
-      "de.heikoseeberger" %% "akka-http-upickle" % "1.23.0",
-      "com.lihaoyi" %% "upickle" % upickleVersion,
-      "com.lihaoyi" %% "ujson" % upickleVersion,
       "com.softwaremill.macwire" %% "macros" % "2.3.1",
       "org.scalatest" %% "scalatest" % "3.0.5" % Test,
-      "com.dimafeng" %% "testcontainers-scala" % "0.36.0" % Test,
-      "com.dimafeng" %% "testcontainers-scala-mssqlserver" % "0.36.0" % Test,
-      "org.testcontainers" % "mssqlserver" % "1.17.2" % Test,
+      "com.dimafeng" %% "testcontainers-scala" % "0.40.12" % Test,
+      "com.dimafeng" %% "testcontainers-scala-mssqlserver" % "0.40.12" % Test,
+      "org.testcontainers" % "mssqlserver" % "1.17.6" % Test,
       "com.storm-enroute" %% "scalameter-core" % "0.10.1" % Test,
       "com.microsoft.sqlserver" % "mssql-jdbc" % "8.2.2.jre8",
       "org.mockito" % "mockito-core" % "3.3.3"
     ),
-    dockerBaseImage := "eclipse-temurin:8u345-b01-jre-jammy",
+    dockerBaseImage := "eclipse-temurin:11-jre-jammy",
     Docker / packageName := "mint-account",
     dockerRepository := sys.env.get("REGISTRY"),
     dockerUpdateLatest := true,
@@ -68,6 +64,8 @@ lazy val root = (project in file("."))
     buildInfoPackage := "org.mint.info",
     buildInfoOptions += BuildInfoOption.ToJson,
   )
+
+ThisBuild / dependencyOverrides += "org.scala-lang.modules" %% "scala-xml" % "2.3.0"
 
 scalacOptions ++= Seq(
   "-deprecation",

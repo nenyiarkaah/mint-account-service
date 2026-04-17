@@ -3,7 +3,7 @@ package org.mint.services
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import cats.instances.future.catsStdInstancesForFuture
 import org.mint.Exceptions.InvalidAccount
-import org.mint.models.ImportStatus
+import org.mint.models.{Account, ImportStatus}
 import org.mint.repositories.AccountRepository
 import org.mint.utils.TestData._
 import org.mockito.ArgumentMatchers._
@@ -164,6 +164,20 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
         result =>
           result shouldEqual givenAndExpectedId
       }
+    }
+    "raise an error when updated account name is null" in {
+      val resultException = service.update(berlin.id, berlinWithNullName)
+      recoverToSucceededIf[InvalidAccount](resultException)
+    }
+    "raise an error when updated account name is empty string" in {
+      val resultException = service.update(berlin.id, berlinWithEmptyName)
+      recoverToSucceededIf[InvalidAccount](resultException)
+    }
+    "raise an error when updated account name already exists" in {
+      when(mockRepository.selectAll) thenReturn(Future(Seq(madrid)))
+      val berlinRenamedToMadrid = Account(berlin.id, madrid.name, berlin.accountType, berlin.company, berlin.isActive, berlin.isConfiguredForImport)
+      val resultException = service.update(berlin.id, berlinRenamedToMadrid)
+      recoverToSucceededIf[InvalidAccount](resultException)
     }
   }
 
