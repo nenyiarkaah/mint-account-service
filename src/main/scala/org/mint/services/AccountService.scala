@@ -56,8 +56,6 @@ class AccountService(repo: ARepository)(implicit
       .getOrElse(Right(DefaultSortField))
 
     M.fromEither(sortBy).flatMap { sort =>
-      val page11 = 1
-
       val pageN = page.getOrElse(DefaultPage)
       val size = pageSize.getOrElse(DefaultPageSize)
 

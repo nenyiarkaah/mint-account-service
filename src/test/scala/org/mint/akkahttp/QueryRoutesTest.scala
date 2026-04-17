@@ -54,6 +54,13 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest wit
         response shouldEqual expectedAccounts
       }
     }
+    "return 400 when sort field is unknown" in {
+      val request = selectAllRequest("bogus")
+      when(repository.sortingFields) thenReturn Set("id", "name")
+      request ~> Route.seal(routes) ~> check {
+        status shouldEqual StatusCodes.BadRequest
+      }
+    }
   }
 
   "select account by id" should {

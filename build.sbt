@@ -5,9 +5,6 @@ import scala.sys.process.Process
 lazy val akkaHttpVersion = "10.2.10"
 lazy val akkaVersion = "2.6.21"
 lazy val slickVersion = "3.4.1"
-lazy val http4sVersion = "0.19.0-M4"
-lazy val circeVersion = "0.11.1"
-lazy val doobieVersion = "0.6.0"
 
 lazy val root = (project in file("."))
   .configs(E2ETest, UnitTest)
@@ -20,17 +17,9 @@ lazy val root = (project in file("."))
     version := "2.0.1",
     scalacOptions ++= Seq("-Ypartial-unification"),
     libraryDependencies ++= Seq(
-      "org.tpolecat" %% "doobie-core"      % doobieVersion,
-      "org.tpolecat" %% "doobie-postgres"  % doobieVersion,
-      "org.http4s" %% "http4s-blaze-server" % http4sVersion,
-      "org.http4s" %% "http4s-circe" % http4sVersion,
-      "org.http4s" %% "http4s-dsl" % http4sVersion,
-      "io.circe" %% "circe-generic" % circeVersion,
-      "io.circe" %% "circe-java8" % circeVersion,
       "org.typelevel" %% "cats-core" % "2.0.0",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
       "ch.qos.logback" % "logback-classic" % "1.2.3",
-      "org.postgresql" % "postgresql" % "9.4-1203-jdbc4",
       "com.github.pureconfig" %% "pureconfig" % "0.10.1",
       "eu.timepit" %% "refined-pureconfig" % "0.9.3",
       "com.typesafe.slick" %% "slick" % slickVersion,
