@@ -62,7 +62,8 @@ class CommandRoutesTest extends WordSpec with Matchers with ScalatestRouteTest w
     "update existing account with valid name and return it's id" in {
       val request = updateRequest(berlin, berlin.id)
       val expectedId = berlin.id
-      when(repository.update( berlin.id, berlin)) thenReturn Future.successful(expectedId)
+      when(repository.selectAll) thenReturn Future.successful(Seq.empty)
+      when(repository.update(berlin.id, berlin)) thenReturn Future.successful(expectedId)
 
       request ~> routes ~> check {
         commonChecks
@@ -70,18 +71,34 @@ class CommandRoutesTest extends WordSpec with Matchers with ScalatestRouteTest w
         id shouldEqual expectedId
       }
     }
+    "reject update when account name is empty" in {
+      val request = updateRequest(berlinWithEmptyName, berlin.id)
 
-    "delete" should {
-      "delete an account based on id" in {
-        val id = berlin.id
-        val request = deleteRequest(id)
-        when(repository.delete(id)) thenReturn Future.successful(id)
+      request ~> routes ~> check {
+        status shouldEqual StatusCodes.PreconditionFailed
+      }
+    }
+    "reject update when account name already exists" in {
+      val berlinRenamedToMadrid = berlin.copy(name = madrid.name)
+      val request = updateRequest(berlinRenamedToMadrid, berlin.id)
+      when(repository.selectAll) thenReturn Future.successful(Seq(madrid))
 
-        request ~> routes ~> check {
-          commonChecks
-          val response = entityAs[CommandResult]
-          response.id shouldEqual id
-        }
+      request ~> routes ~> check {
+        status shouldEqual StatusCodes.PreconditionFailed
+      }
+    }
+  }
+
+  "delete" should {
+    "delete an account based on id" in {
+      val id = berlin.id
+      val request = deleteRequest(id)
+      when(repository.delete(id)) thenReturn Future.successful(id)
+
+      request ~> routes ~> check {
+        commonChecks
+        val response = entityAs[CommandResult]
+        response.id shouldEqual id
       }
     }
   }

@@ -66,9 +66,8 @@ Invalid config causes a startup failure, not a runtime error.
 
 ```bash
 sbt compileScalaStyle          # Lint / code style
-sbt +ut:test                   # Unit tests
-sbt +it:test                   # Integration tests
-sbt +e2e:test                  # End-to-end tests (requires Docker)
+sbt +ut:test                   # Unit + integration tests
+sbt +e2e:test                  # End-to-end tests (requires Docker + source test.env)
 sbt "ut:testOnly *ClassName*"  # Run a single test class
 ```
 
@@ -144,7 +143,6 @@ The `sort` query parameter accepts: `id`, `name`, `accountType`, `company`, `isA
 3. Run the full test suite before opening a PR:
    ```bash
    sbt +ut:test
-   sbt +it:test
-   sbt +e2e:test
+   source test.env && sbt +e2e:test
    ```
 4. Open a pull request against `main`
