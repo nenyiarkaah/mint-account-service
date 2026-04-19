@@ -251,10 +251,8 @@ class E2ETest
   }
 
   private def insertData(accounts: IndexedSeq[Account]): Unit = accounts.foreach { t =>
-      var id = 1
       val insert = insertRequest(t)
       insertAndCheckSuccessfulRequest(insert, t.id)
-      id = 1
     }
 
   private def insertAndCheckSuccessfulRequest(insert: HttpRequest, expectedId: Int): Any = {

@@ -10,6 +10,7 @@ import slick.jdbc.SQLServerProfile.api._
 import com.softwaremill.macwire._
 import org.mint.akkahttp.{CommandRoutes, QueryRoutes}
 import org.mint.configs.FeatureToggles
+import org.mint.metrics.MetricsRegistry
 import org.mint.services.{AccountService, FeatureTogglesService}
 import org.mint.json.SprayJsonFormat._
 
@@ -20,6 +21,7 @@ class AkkaModule(cfg: Config, featureToggles: FeatureToggles)
 
   val db = Database.forConfig("storage", cfg)
   private val featureTogglesService = wire[FeatureTogglesService]
+  val metricsRegistry = wire[MetricsRegistry]
   val accountRepository = wire[AccountRepository]
   val accountService = wire[AccountService]
   val routes = concat(wire[CommandRoutes].routes, wire[QueryRoutes].routes)

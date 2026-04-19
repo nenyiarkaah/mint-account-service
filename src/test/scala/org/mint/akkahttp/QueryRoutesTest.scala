@@ -6,10 +6,11 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import cats.instances.future.catsStdInstancesForFuture
 import com.softwaremill.macwire.wire
 import org.mint.json.SprayJsonFormat._
-import org.mint.models.{Account, AccountTypes, ImportStatus}
+import org.mint.models.{Account, AccountTypes, HealthStatus, ImportStatus}
+import org.mint.metrics.MetricsRegistry
 import org.mint.repositories.{AccountRepository, Repository}
 import org.mint.services.AccountService
-import org.mint.unit.utils.RequestSupport._
+import org.mint.unit.utils.RequestSupport.{metricsRequest, _}
 import org.mint.utils.TestData._
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
@@ -22,6 +23,7 @@ import scala.concurrent.Future
 
 class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest with MockitoSugar with ScalaFutures  {
   val repository = mock[AccountRepository]
+  val metricsRegistry = new MetricsRegistry
   val service = wire[AccountService]
   val routes = wire[QueryRoutes].routes
 
@@ -61,6 +63,20 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest wit
         status shouldEqual StatusCodes.BadRequest
       }
     }
+    "return 400 when page is negative" in {
+      val request = selectAllRequest(-1, 10)
+      when(repository.sortingFields) thenReturn Set("id", "name")
+      request ~> Route.seal(routes) ~> check {
+        status shouldEqual StatusCodes.BadRequest
+      }
+    }
+    "return 400 when pageSize is zero" in {
+      val request = selectAllRequest(0, 0)
+      when(repository.sortingFields) thenReturn Set("id", "name")
+      request ~> Route.seal(routes) ~> check {
+        status shouldEqual StatusCodes.BadRequest
+      }
+    }
   }
 
   "select account by id" should {
@@ -89,7 +105,7 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest wit
   "existingTypeofAccounts" should {
     "return a type of account list of 2 test and current" in {
       val request = existingTypeofAccountsRequest
-      when(repository.selectAll) thenReturn Future.successful(accounts)
+      when(repository.existingAccountTypes) thenReturn Future.successful(Seq("current", "test"))
 
       request ~> routes ~> check {
         commonChecks
@@ -144,18 +160,42 @@ class QueryRoutesTest extends WordSpec with Matchers with ScalatestRouteTest wit
   }
 
   "health" should {
-    "return 200 with version" in {
+    "return 200 with status UP when DB is reachable" in {
       val request = healthRequest
+      when(repository.healthCheck) thenReturn Future.successful(true)
       request ~> routes ~> check {
-        commonChecks
-        val response = entityAs[String]
-        response contains "name: mint-statement"
-        response contains "version"
-        response contains "scalaVersion"
-        response contains "sbtVersion"
+        status shouldEqual StatusCodes.OK
+        val response = entityAs[HealthStatus]
+        response.status shouldEqual "UP"
+        response.db shouldEqual "UP"
+        response.buildInfo should contain key "version"
+        response.uptimeMs should be >= 0L
+      }
+    }
+    "return 503 with status DOWN when DB is unreachable" in {
+      val request = healthRequest
+      when(repository.healthCheck) thenReturn Future.successful(false)
+      request ~> routes ~> check {
+        status shouldEqual StatusCodes.ServiceUnavailable
+        val response = entityAs[HealthStatus]
+        response.status shouldEqual "DOWN"
+        response.db shouldEqual "DOWN"
       }
     }
   }
+  "metrics" should {
+    "return 200 with counters and timers" in {
+      val request = metricsRequest
+      request ~> routes ~> check {
+        status shouldEqual StatusCodes.OK
+        val response = entityAs[String]
+        response should include("counters")
+        response should include("timers")
+        response should include("gauges")
+      }
+    }
+  }
+
   private def commonChecks = {
     val expectedStatusCode = StatusCodes.OK
     val contentType = ContentTypes.`application/json`

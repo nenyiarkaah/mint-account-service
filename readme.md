@@ -109,7 +109,8 @@ All endpoints are prefixed with `/api/accounts`.
 | `DELETE` | `/api/accounts/:id` | Delete an account |
 | `GET` | `/api/accounts/existingtypeofaccounts` | Get distinct account types |
 | `GET` | `/api/accounts/isconfiguredforimports?id=:id` | Check if account is configured for imports |
-| `GET` | `/api/accounts/health` | Health check (returns build info) |
+| `GET` | `/api/accounts/health` | Health check — returns `{status, db, buildInfo, uptimeMs}` |
+| `GET` | `/api/accounts/metrics` | Dropwizard metrics — counters, timers, JVM gauges as JSON |
 
 ### Account Model
 
@@ -135,6 +136,79 @@ The `sort` query parameter accepts: `id`, `name`, `accountType`, `company`, `isA
 | `200 OK` | Success, returns JSON |
 | `412 Precondition Failed` | Validation error (e.g. duplicate name, missing required field) |
 | `500 Internal Server Error` | Unexpected failure |
+
+## Observability
+
+### Metrics
+
+`GET /api/accounts/metrics` returns a JSON snapshot of all Dropwizard metrics:
+
+```json
+{
+  "counters": {
+    "service.insert.success": { "count": 12 },
+    "service.insert.failure": { "count": 0 }
+  },
+  "timers": {
+    "service.insert.timer": { "count": 12, "meanMs": 3.2, "p99Ms": 18.0, "meanRate": 1.1 }
+  },
+  "gauges": {
+    "jvm.memory.heap.used": { "value": 48234496 }
+  }
+}
+```
+
+Counters tracked: `service.insert.success/failure`, `service.update.success/failure`, `service.delete.success`.  
+Timers tracked: `service.insert.timer`, `service.selectAll.timer`, `repo.selectAll/insert/update/delete/healthCheck.timer`.  
+JVM gauges: heap, GC, thread states (registered automatically on startup).
+
+### Health check
+
+`GET /api/accounts/health` returns:
+
+```json
+{
+  "status": "UP",
+  "db": "UP",
+  "buildInfo": { "name": "mint-account", "version": "2.0.1", "scalaVersion": "2.12.20", "sbtVersion": "1.x" },
+  "uptimeMs": 34021
+}
+```
+
+Returns `200` when DB is reachable, `503` when it is not.
+
+### Structured logging
+
+Logs are written as plain text by default. Set `LOG_FORMAT=json` at runtime to switch to JSON lines (via Logstash Logback Encoder):
+
+```bash
+LOG_FORMAT=json sbt run
+```
+
+Each log line in JSON mode includes `timestamp`, `level`, `message`, `logger`, and any MDC fields (`requestId`, `httpMethod`, `path`, `accountId`, `accountName`) set by the route and service layers.
+
+### Distributed tracing (OpenTelemetry)
+
+Attach the [OpenTelemetry Java agent](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases) with no code changes:
+
+```bash
+java \
+  -javaagent:/path/to/opentelemetry-javaagent.jar \
+  -Dotel.service.name=mint-account-service \
+  -Dotel.exporter.otlp.endpoint=http://collector:4317 \
+  -jar target/universal/stage/bin/mint-account
+```
+
+Key environment variables:
+
+| Variable | Description |
+|---|---|
+| `OTEL_SERVICE_NAME` | Service name reported to the tracing backend |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | OTLP collector endpoint (gRPC) |
+| `OTEL_TRACES_EXPORTER` | `otlp` (default), `zipkin`, `jaeger`, or `none` |
+| `OTEL_METRICS_EXPORTER` | `none` to avoid conflicts with Dropwizard metrics |
+
+The agent auto-instruments Akka HTTP server spans, JDBC calls (via Slick/HikariCP), and thread pool activity.
 
 ## Contributing
 

@@ -2,7 +2,8 @@ package org.mint.services
 
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import cats.instances.future.catsStdInstancesForFuture
-import org.mint.Exceptions.InvalidAccount
+import org.mint.Exceptions.{InvalidAccount, InvalidPaginationParams}
+import org.mint.metrics.MetricsRegistry
 import org.mint.models.{Account, ImportStatus}
 import org.mint.repositories.AccountRepository
 import org.mint.utils.TestData._
@@ -16,7 +17,8 @@ import scala.concurrent.Future
 
 class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestRouteTest with ScalaFutures with MockitoSugar {
   val mockRepository = mock[AccountRepository]
-  val service = new AccountService(mockRepository)
+  val metricsRegistry = new MetricsRegistry
+  val service = new AccountService(mockRepository, metricsRegistry)
   when(mockRepository.sortingFields) thenReturn(Set("id", "name"))
 
   "insert" should {
@@ -118,6 +120,18 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
           accounts shouldEqual Seq(brussels, madrid, paris)
       }
     }
+    "raise an error when page is negative" in {
+      when(mockRepository.sortingFields) thenReturn Set("id")
+      recoverToSucceededIf[InvalidPaginationParams](service.selectAll(Some(-1), Some(10), None))
+    }
+    "raise an error when pageSize is zero" in {
+      when(mockRepository.sortingFields) thenReturn Set("id")
+      recoverToSucceededIf[InvalidPaginationParams](service.selectAll(Some(0), Some(0), None))
+    }
+    "raise an error when pageSize is negative" in {
+      when(mockRepository.sortingFields) thenReturn Set("id")
+      recoverToSucceededIf[InvalidPaginationParams](service.selectAll(Some(0), Some(-5), None))
+    }
   }
 
   "select account by id" should {
@@ -143,7 +157,7 @@ class AccountServiceTest extends AsyncWordSpecLike with Matchers with ScalatestR
 
   "existingTypeofAccounts" should {
     "return a distinct list of 2 account types" in {
-      when(mockRepository.selectAll) thenReturn(Future(mockData))
+      when(mockRepository.existingAccountTypes) thenReturn Future.successful(Seq("current", "test"))
       whenReady(service.existingTypeofAccounts) {
         result =>
           val typeofAccounts = result.accountTypes

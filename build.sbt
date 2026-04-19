@@ -19,7 +19,9 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-core" % "2.0.0",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
-      "ch.qos.logback" % "logback-classic" % "1.2.3",
+      "ch.qos.logback" % "logback-classic" % "1.2.13",
+      "net.logstash.logback" % "logstash-logback-encoder" % "7.2",
+      "org.codehaus.janino" % "janino" % "3.1.9",
       "com.github.pureconfig" %% "pureconfig" % "0.10.1",
       "eu.timepit" %% "refined-pureconfig" % "0.9.3",
       "com.typesafe.slick" %% "slick" % slickVersion,
@@ -36,7 +38,10 @@ lazy val root = (project in file("."))
       "org.testcontainers" % "mssqlserver" % "1.17.6" % Test,
       "com.storm-enroute" %% "scalameter-core" % "0.10.1" % Test,
       "com.microsoft.sqlserver" % "mssql-jdbc" % "8.2.2.jre11",
-      "org.mockito" % "mockito-core" % "3.3.3"
+      "org.mockito" % "mockito-core" % "3.3.3",
+      "nl.grons" %% "metrics4-scala" % "4.2.9",
+      "io.dropwizard.metrics" % "metrics-core" % "4.2.25",
+      "io.dropwizard.metrics" % "metrics-jvm" % "4.2.25"
     ),
     dockerBaseImage := "eclipse-temurin:11-jre-jammy",
     Docker / packageName := "mint-account",
@@ -44,7 +49,7 @@ lazy val root = (project in file("."))
     dockerUpdateLatest := true,
     dockerBuildOptions := Seq("--force-rm", "-t", "[dockerAlias]", "--platform=linux/arm,linux/amd64"),
     Test / fork := true,
-    addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6")
+    addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.3" cross CrossVersion.full)
   )
   .enablePlugins(JavaAppPackaging, AshScriptPlugin)
   .enablePlugins(BuildInfoPlugin).

@@ -8,6 +8,7 @@ import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
 import com.typesafe.scalalogging.StrictLogging
 import org.mint.Exceptions.InvalidAccount
+import org.mint.akkahttp.MDCSupport.withRequestMDC
 import org.mint.json.GenericJsonWriter
 import org.mint.models.{Account, CommandResult}
 import org.mint.services.AccountService
@@ -31,10 +32,10 @@ class CommandRoutes(service: AccountService)(
         pathEndOrSingleSlash {
           post {
             entity(as[Account]) { account =>
-              logger.info("Create new account '{}'", account)
-              val inserted = service.insert(account)
-              complete {
-                toCommandResponse(inserted, CommandResult)
+              withRequestMDC {
+                logger.info("Create new account '{}'", account)
+                val inserted = service.insert(account)
+                complete { toCommandResponse(inserted, CommandResult) }
               }
             }
           }
@@ -42,20 +43,20 @@ class CommandRoutes(service: AccountService)(
         path(IntNumber) { id =>
           concat(put {
             entity(as[Account]) { account =>
-              logger.info("Update account: '{}'", account)
-              val updated = service.update(id, account)
-              complete {
-                toCommandResponse(updated, CommandResult)
+              withRequestMDC {
+                logger.info("Update account: '{}'", account)
+                val updated = service.update(id, account)
+                complete { toCommandResponse(updated, CommandResult) }
               }
             }
           })
         },
         path(IntNumber) { id =>
           concat(delete {
-            logger.info("Delete account: '{}'", id)
-            val deleted = service.delete(id)
-            complete {
-              toCommandResponse(deleted, CommandResult)
+            withRequestMDC {
+              logger.info("Delete account: '{}'", id)
+              val deleted = service.delete(id)
+              complete { toCommandResponse(deleted, CommandResult) }
             }
           })
         }
@@ -64,10 +65,10 @@ class CommandRoutes(service: AccountService)(
     corsHandler(route)
   }
 
-    private def toCommandResponse[T](
-                                      id: Future[Int],
-                                      f: Int => T
-                                    )(implicit w: GenericJsonWriter[T], ec: ExecutionContext): Future[HttpResponse] =
+  private def toCommandResponse[T](
+                                    id: Future[Int],
+                                    f: Int => T
+                                  )(implicit w: GenericJsonWriter[T], ec: ExecutionContext): Future[HttpResponse] =
     id.transformWith {
       case Success(i) =>
         val e = HttpEntity(ContentTypes.`application/json`, w.toJsonString(f(i)))

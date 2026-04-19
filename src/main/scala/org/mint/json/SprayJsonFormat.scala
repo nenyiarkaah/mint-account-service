@@ -1,7 +1,7 @@
 package org.mint.json
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.mint.models.{Account, AccountTypes, CommandResult, ImportStatus}
+import org.mint.models.{Account, AccountTypes, CommandResult, HealthStatus, ImportStatus}
 import spray.json.{DeserializationException, JsString, JsValue, RootJsonFormat}
 import spray.json.DefaultJsonProtocol._
 import spray.json._
@@ -11,6 +11,7 @@ trait SprayJsonFormat extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val accountTypesFormat: RootJsonFormat[AccountTypes] = jsonFormat1(AccountTypes)
   implicit val commandResultFormat: RootJsonFormat[CommandResult] = jsonFormat1(CommandResult)
   implicit val importStatusFormat: RootJsonFormat[ImportStatus] = jsonFormat2(ImportStatus)
+  implicit val healthStatusFormat: RootJsonFormat[HealthStatus] = jsonFormat4(HealthStatus)
 
   // Generic Enumeration formatter
   implicit def enumFormat[T <: Enumeration](implicit enu: T): RootJsonFormat[T#Value] =

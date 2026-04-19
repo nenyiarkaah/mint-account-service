@@ -6,6 +6,7 @@ import cats.instances.future.catsStdInstancesForFuture
 import com.softwaremill.macwire.wire
 import org.mint.json.SprayJsonFormat._
 import org.mint.models.{Account, CommandResult}
+import org.mint.metrics.MetricsRegistry
 import org.mint.repositories.{AccountRepository, Repository}
 import org.mint.services.AccountService
 import org.mint.unit.utils.RequestSupport._
@@ -20,6 +21,7 @@ import scala.concurrent.Future
 
 class CommandRoutesTest extends WordSpec with Matchers with ScalatestRouteTest with MockitoSugar with ScalaFutures  {
   val repository = mock[AccountRepository]
+  val metricsRegistry = new MetricsRegistry
   val service = wire[AccountService]
   val routes = wire[CommandRoutes].routes
 

@@ -17,6 +17,9 @@ object RequestSupport {
   def selectAllRequest(sort: String): HttpRequest =
     HttpRequest(uri = s"$prefix?sort=$sort")
 
+  def selectAllRequest(page: Int, pageSize: Int): HttpRequest =
+    HttpRequest(uri = s"$prefix?page=$page&pageSize=$pageSize")
+
   def selectByRequest(id: Int): HttpRequest =
     HttpRequest(uri = s"$prefix/$id")
 
@@ -35,4 +38,7 @@ object RequestSupport {
   }
   def healthRequest: HttpRequest =
     HttpRequest(uri = s"$prefix/health", method = HttpMethods.GET)
+
+  def metricsRequest: HttpRequest =
+    HttpRequest(uri = s"$prefix/metrics", method = HttpMethods.GET)
 }
