@@ -10,7 +10,7 @@ import org.mint.endtoend.utils.TestData._
 import org.mint.json.SprayJsonFormat._
 import org.mint.models._
 import org.mint.modules.AkkaModule
-import org.mint.e2e.utils.RequestSupport._
+import org.mint.e2e.utils.RequestSupport.{metricsRequest, _}
 import org.scalatest.{BeforeAndAfter, Matchers, WordSpec}
 
 import scala.concurrent.Await
@@ -245,8 +245,37 @@ class E2ETest
   }
 
   "health" should {
-    "return 200" in {
-      checkSuccessfulRequest(healthRequest)
+    "return 200 with status UP and db UP when DB is reachable" in {
+      healthRequest ~> mod.routes ~> check {
+        status shouldEqual StatusCodes.OK
+        contentType shouldEqual ContentTypes.`application/json`
+        val response = entityAs[HealthStatus]
+        response.status shouldEqual "UP"
+        response.db shouldEqual "UP"
+        response.buildInfo should contain key "version"
+        response.uptimeMs should be >= 0L
+      }
+    }
+  }
+
+  "metrics" should {
+    "return 200 with counters, timers and gauges" in {
+      metricsRequest ~> mod.routes ~> check {
+        status shouldEqual StatusCodes.OK
+        val body = entityAs[String]
+        body should include("counters")
+        body should include("timers")
+        body should include("gauges")
+      }
+    }
+    "include service timers after an insert" in {
+      insertData(mockDataForEndToEnd)
+      metricsRequest ~> mod.routes ~> check {
+        status shouldEqual StatusCodes.OK
+        val body = entityAs[String]
+        body should include("service.insert.timer")
+        body should include("service.insert.success")
+      }
     }
   }
 

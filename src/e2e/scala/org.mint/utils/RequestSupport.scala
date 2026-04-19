@@ -35,4 +35,7 @@ object RequestSupport {
   }
   def healthRequest: HttpRequest =
     HttpRequest(uri = s"$prefix/health", method = HttpMethods.GET)
+
+  def metricsRequest: HttpRequest =
+    HttpRequest(uri = s"$prefix/metrics", method = HttpMethods.GET)
 }

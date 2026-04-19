@@ -5,6 +5,7 @@ import akka.http.scaladsl.Http
 import com.typesafe.scalalogging.StrictLogging
 import org.mint.configs.AppConfig
 import org.mint.modules.AkkaModule
+import org.mint.utils.MDCPropagatingExecutionContext
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
@@ -12,7 +13,7 @@ import scala.util.{Failure, Success}
 
 object AkkaMain extends App with StrictLogging {
   implicit val system: ActorSystem = ActorSystem("accounts-service")
-  implicit val ec: ExecutionContext = system.dispatcher
+  implicit val ec: ExecutionContext = MDCPropagatingExecutionContext(system.dispatcher)
 
   val (server, storage, featureToggles, cfg) =
     AppConfig.load.fold(e => sys.error(s"Failed to load configuration:\n${e.toList.mkString("\n")}"), identity)
