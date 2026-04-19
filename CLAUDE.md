@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # Rules
 
+- **Do not add Co-Authored-By lines to commit messages.**
 - **Always run the full test suite** after every code change before considering a task done:
     - `sbt +ut:test` — unit tests (services/) and integration tests (akkahttp/), both in `src/test/scala`
     - `sbt +e2e:test` — end-to-end tests (requires Docker + `source test.env`)
