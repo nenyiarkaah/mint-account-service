@@ -27,19 +27,29 @@ jobs:
           java-version: 11
       - name: Setup sbt
         uses: sbt/setup-sbt@v1.1.22
+      - name: Cache sbt dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.ivy2/cache
+            ~/.sbt
+            ~/.cache/coursier
+          key: ${{ runner.os }}-sbt-${{ hashFiles('build.sbt', 'project/**') }}
+          restore-keys: |
+            ${{ runner.os }}-sbt-
       - name: Compile
         run: sbt compile
       - name: Build and Code Style Test
-        run: sbt +test:scalastyle
+        run: sbt test:scalastyle
       - name: Rename test.env to .env
         run: |
           cp test.env .env
       - name: Dotenv Action
         uses: falti/dotenv-action@v1.1.5
       - name: Unit & Integration Tests
-        run: sbt +ut:test
+        run: sbt ut:test
       - name: E2E Test
-        run: sbt +e2e:test
+        run: sbt e2e:test
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
       - name: Log into registry ${{ env.REGISTRY }}
